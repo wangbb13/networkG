@@ -1,0 +1,127 @@
+{
+  "gdb": "zhihu",
+  "node": [
+    {
+      "label": "user",
+      "amount": 100000,
+      "attr": [
+        {"key": "gender", "value": {"type": "str", "range": ["male", "female"]}},
+        {"key": "industry", "value": {"type": "str", "range": ["education", "IT", "medical", "manage", "finance", "student", "researcher"]}},
+        {"key": "place", "value": {"type": "str", "range": ["beijing", "shanghai", "shenzhen", "hongkong", "overseas", "second-tier", "third-tier", "country"]}}
+      ]
+    }, {
+      "label": "question",
+      "amount": 500000,
+      "attr": [
+        {"key": "name", "value": {"type": "str", "range": null}},
+        {"key": "pose-time", "value": {"type": "time", "range": null}},
+        {"key": "category", "value": {"type": "str", "range": ["game", "sport", "history", "technique", "work", "culture", "science", "art", "event"]}}
+      ]
+    }, {
+      "label": "article",
+      "amount": 20000,
+      "attr": [
+        {"key": "title", "value": {"type": "str", "range": null}},
+        {"key": "create-time", "value": {"type": "time", "range": null}},
+        {"key": "category", "value": {"type": "str", "range": ["essay", "technique", "comment", "others"]}}
+      ]
+    }, {
+      "label": "collect-folder",
+      "amount": 5000,
+      "attr": [
+        {"key": "name", "value": {"type": "str", "range": null}},
+        {"key": "create-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "n-answer",
+      "amount": 2000000,
+      "attr": [
+        {"key": "ans-content", "value": {"type": "str", "range": null}},
+        {"key": "write-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "n-comment",
+      "amount": 5000000,
+      "attr": [
+        {"key": "cmt-content", "value": {"type": "str", "range": null}},
+        {"key": "write-time", "value": {"type": "time", "range": null}}
+      ]
+    }
+  ],
+  "relation": [
+    {
+      "label": "follow",
+      "source": "user",
+      "target": "user",
+      "in": {"type": "power_law", "lambda": 1.49, "min-d": 1, "max-d": 200},
+      "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 400},
+      "community": {
+        "amount": 20,
+        "distribution": {"type": "power_law", "lambda": 2.1},
+        "noise": {"threshold": 0.2, "param-c": 0.5},
+        "overlap": 0.1
+      },
+      "attr": [
+        {"key": "f-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "pose",
+      "source": "user",
+      "target": "question",
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1},
+      "out": {"type": "power_law", "lambda": 1.25, "min-d": 1, "max-d": 512},
+      "attr": [
+        {"key": "pose-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "publish",
+      "source": "user",
+      "target": "article",
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1},
+      "out": {"type": "power_law", "lambda": 2.1, "min-d": 1, "max-d": 100},
+      "attr": [
+        {"key": "pub-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "create-c",
+      "source": "user",
+      "target": "collect-folder",
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1},
+      "out": {"type": "power_law", "lambda": 2.2, "min-d": 1, "max-d": 5},
+      "attr": [
+        {"key": "cc-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "answer",
+      "source": "user",
+      "middle": "n-answer",
+      "target": "question",
+      "in": {"type": "power_law", "lambda": 1.93, "min-d": 1, "max-d": 100},
+      "out": {"type": "power_law", "lambda": 1.85, "min-d": 1, "max-d": 200},
+      "attr": [
+        {"key": "ans-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "comment-ans",
+      "source": "user",
+      "middle": "n-comment",
+      "target": "n-answer",
+      "in": {"type": "power_law", "lambda": 1.57, "min-d": 1, "max-d": 1000},
+      "out": {"type": "power_law", "lambda": 1.62, "min-d": 1, "max-d": 2000},
+      "attr": [
+        {"key": "cmt-ans-time", "value": {"type": "time", "range": null}}
+      ]
+    }, {
+      "label": "contain",
+      "source": "collect-folder",
+      "target": "article",
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1},
+      "out": {"type": "power_law", "lambda": 2.2, "min-d": 1, "max-d": 128},
+      "attr": [
+        {"key": "con-time", "value": {"type": "time", "range": null}}
+      ]
+    }
+  ],
+  "query": {},
+  "graph-format": "TSV, CSR, ADJ"
+}
