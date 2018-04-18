@@ -19,13 +19,15 @@ class NGPowerLaw(object):
         self.dmin = dmin
         self.dmax = dmax
         self.node = node
-        self.cdf_d = []
-        self.cdf_j = []
-        self.idx_j = []
+        # self.cdf_d = []
+        # self.cdf_j = []
+        # self.idx_j = []
         self.d_exp_r = [d ** self.lmd for d in range(dmin, dmax+1)]
         self.sigma = sum(self.d_exp_r)
         self.c = 1 / self.sigma
         self.C = node / self.sigma
+        self.cdf_d = self.get_cdf(self.c)
+        self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
 
     def integrate(self):
         if self.lmd == -1:
@@ -59,15 +61,15 @@ class NGPowerLaw(object):
             return cdf, idx
 
     def get_d(self):
-        if not self.cdf_d:
-            self.cdf_d = self.get_cdf(self.c)
+        # if not self.cdf_d:
+        #     self.cdf_d = self.get_cdf(self.c)
         y = random.random()
         i = bin_search(self.cdf_d, y)
         return i + self.dmin
 
     def get_j(self):
-        if (not self.cdf_j) and (not self.idx_j):
-            self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
+        # if (not self.cdf_j) and (not self.idx_j):
+        #     self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
         y = max(random.random(), self.cdf_j[0])
         i = bin_search(self.cdf_j, y)
         if self.cdf_j[i] > y:
@@ -81,36 +83,39 @@ class NGPowerLaw(object):
 
 
 def test():
-    node = 1000
+    node = 131072
     lmd = 1.2
     dmin = 1
-    dmax = 40
+    dmax = 3600
     import time
     t0 = time.time()
     power_law = NGPowerLaw(lmd, dmin, dmax, node)
     t1 = time.time()
     d_list = [0] * node
     j_list = [0] * node
+    i_list = [0] * node
     for i in range(node):
         d_list[i] = power_law.get_d()
     t2 = time.time()
-    show_log_plot(d_list, dmin, dmax, title='out degree distribution')
     total_degree = 0
-    img = np.zeros((node, node))
+    # img = np.zeros((node, node))
     is_even = node % 2 == 1
     t3 = time.time()
     for i in range(node):
+        img = set()
         for _ in range(d_list[i]):
             j = power_law.get_j()
-            j = transform(is_even, j, node-1)
-            if img[i, j] == 0:
-                img[i, j] = 0.9
+            # j = transform(is_even, j, node-1)
+            if (i, j) not in img:
+                img.add((i, j))
                 total_degree += 1
                 j_list[j] += 1
+                i_list[i] += 1
     t4 = time.time()
-    show_log_plot(j_list, dmin, dmax, title='in degree distribution')
-    plt.imshow(img, cmap='gray')
-    plt.show()
+    # show_log_plot(i_list, dmin, dmax, title='out degree distribution')
+    # show_log_plot(j_list, dmin, dmax, title='in degree distribution')
+    # plt.imshow(img, cmap='gray')
+    # plt.show()
     print('total edges: ', total_degree)
     print('initial class time: ', t1-t0, ' seconds')
     print('calc out degree time: ', t2-t1, ' seconds')
@@ -202,6 +207,10 @@ def test_community():
 
 
 def test_community_1():
+    """
+    idea: regard a community as a sub-matrix, generate them respectively.
+    :return:
+    """
     node = 1000
     lmd = 1.2
     dmin = 1
@@ -239,6 +248,11 @@ def test_community_1():
 
 
 def test_add_noise():
+    """
+    idea: regard a community as a sub-matrix, generate them respectively.
+        add noise: when d_out > threshold, add some noise
+    :return:
+    """
     node = 1000
     lmd = 1.2
     dmin = 1
@@ -300,6 +314,20 @@ def test_add_noise():
 
 
 def test_overlap_community():
+    """
+    idea: regard a community as a sub-matrix, generate them respectively.
+          when d_out > threshold * dmax, add some noise
+          the degree of noise: [1, dmax]
+          x:    degree
+          f(x): the probability of degree x
+          f(x) = a * exp(-x / c)
+          procedure: generate noise degree
+          y = random(0, 1)
+          d = -c * ln(exp(-1/c) - y * ( (exp(-1/c) - exp(-dmax/c) ) )
+          parameter description:
+          c: > 0, the bigger c, the more noise
+    :return:
+    """
     node = 1000
     lmd = 1.2
     dmin = 1
@@ -307,7 +335,7 @@ def test_overlap_community():
     comu = 3
     threshold = 0.5
     overlap = 0.1
-    param_c = 0.1
+    param_c = 10
     overlap_size = int(node * overlap / 2)
     com_size = [int(node / comu) for _ in range(comu)]
     com_size[-1] += node % comu

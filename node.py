@@ -75,9 +75,9 @@ class Node(object):
             record = self.get_record(i)
             yield record
 
-    def generate_batch_store(self, batch=-1):
+    def generate_batch(self, batch=-1):
         if batch == -1:
-            batch = 10000
+            batch = int(self.node1 / 10)
         pattern = 'id'
         if self.has_attr:
             for key, _ in self.attr.items():

@@ -99,15 +99,17 @@ class JudgeLegal(object):
         JudgeLegal.legal_distribution(rel['out'])
         if 'community' in rel:
             com = rel['community']
-            if not ('amount' in com and 'distribution' in com):
-                raise ConfigError('Lack of fields in community: amount or distribution')
-            if not ('noise' in com and 'overlap' in com):
-                raise ConfigError('Lack of fields in community: noise or overlap')
+            if 'amount' not in com:
+                raise ConfigError('Lack of fields in community: amount')
+            if 'noise' not in com:
+                raise ConfigError('Lack of fields in community: noise')
+            if 'overlap' not in com:
+                raise ConfigError('Lack of fields in community: overlap')
             try:
                 assert int(com['amount'])
             except AssertionError:
                 raise ConfigError('The type of amount should be int')
-            JudgeLegal.legal_distribution(com['distribution'])
+            # JudgeLegal.legal_distribution(com['distribution'])
             noise = com['noise']
             if not isinstance(noise, dict):
                 raise ConfigError('The type of noise in community should be dict')
@@ -124,6 +126,7 @@ class JudgeLegal(object):
                 raise ConfigError('Overlap in community can not be converted to float')
 
 
+'''
 class Scheme(object):
     def __init__(self, config):
         self.config = config
@@ -168,3 +171,4 @@ class Scheme(object):
             raise ConfigError('Lack of fields in scheme: gdb, node or relation')
         if not (isinstance(scheme['node'], list) and isinstance(scheme['relation'], list)):
             raise ConfigError('The type of node and relation should be list')
+'''

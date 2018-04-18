@@ -57,7 +57,6 @@
       "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 400},
       "community": {
         "amount": 20,
-        "distribution": {"type": "power_law", "lambda": 2.1},
         "noise": {"threshold": 0.2, "param-c": 0.5},
         "overlap": 0.1
       },

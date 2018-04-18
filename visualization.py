@@ -36,7 +36,7 @@ def show_log_plot(degree_list, dmin=-1, dmax=-1, title='degree distribution char
     # print(actual_freq)
     x = np.asarray([math.log(x) for x in actual_dgre])
     y = np.asarray([math.log(x) for x in actual_freq])
-    plt.scatter(x, y, marker='.', color=get_rand_color(), linewidths=2)
+    # plt.scatter(x, y, marker='.', color=get_rand_color(), linewidths=2)
     # expected
     if dmin > 0 and dmax > 0:
         expect_dgre = []
