@@ -77,7 +77,7 @@ class Node(object):
 
     def generate_batch(self, batch=-1):
         if batch == -1:
-            batch = int(self.node1 / 10)
+            batch = int(self.amount / 10)
         pattern = 'id'
         if self.has_attr:
             for key, _ in self.attr.items():
