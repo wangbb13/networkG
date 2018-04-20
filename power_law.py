@@ -5,7 +5,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from utility import bin_search
-from visualization import show_log_plot
+from visualization import show_plot
 
 
 class NGPowerLaw(object):
@@ -112,8 +112,8 @@ def test():
                 j_list[j] += 1
                 i_list[i] += 1
     t4 = time.time()
-    # show_log_plot(i_list, dmin, dmax, title='out degree distribution')
-    # show_log_plot(j_list, dmin, dmax, title='in degree distribution')
+    # show_plot(i_list, math.log, dmin, dmax, title='out degree distribution')
+    # show_plot(j_list, math.log, dmin, dmax, title='in degree distribution')
     # plt.imshow(img, cmap='gray')
     # plt.show()
     print('total edges: ', total_degree)
@@ -200,8 +200,8 @@ def test_community():
                     i_list[i] += 1
                 img[i, j] = 0.5
                 j_list[j] += 1
-    show_log_plot(i_list, dmin, dmax, title='out degree distribution')
-    show_log_plot(j_list, dmin, dmax, title='in  degree distribution')
+    show_plot(i_list, math.log, dmin, dmax, title='out degree distribution')
+    show_plot(j_list, math.log, dmin, dmax, title='in  degree distribution')
     plt.imshow(img, cmap='gray')
     plt.show()
 
@@ -241,8 +241,8 @@ def test_community_1():
         start_i += size
         start_j += size
     print('total edges: ', total_edges)
-    show_log_plot(i_list, dmin, dmax, title='out degree distribution')
-    show_log_plot(j_list, dmin, dmax, title='in  degree distribution')
+    show_plot(i_list, math.log, dmin, dmax, title='out degree distribution')
+    show_plot(j_list, math.log, dmin, dmax, title='in  degree distribution')
     plt.imshow(img, cmap='gray')
     plt.show()
 
@@ -307,8 +307,8 @@ def test_add_noise():
     print('total edges: ', total_edges)
     print('extra edges: ', extra_edges)
     print('expect edges: ', expect_edges)
-    show_log_plot(i_list, dmin, dmax, title='out degree distribution')
-    show_log_plot(j_list, dmin, dmax, title='in  degree distribution')
+    show_plot(i_list, math.log, dmin, dmax, title='out degree distribution')
+    show_plot(j_list, math.log, dmin, dmax, title='in  degree distribution')
     plt.imshow(img, cmap='gray')
     plt.show()
 
@@ -419,8 +419,8 @@ def test_overlap_community():
     print('total edges: ', total_edges)
     print('extra edges: ', extra_edges)
     print('expect edges: ', expect_edges)
-    show_log_plot(i_list, dmin, dmax, title='out degree distribution')
-    show_log_plot(j_list, dmin, dmax, title='in  degree distribution')
+    show_plot(i_list, math.log, dmin, dmax, title='out degree distribution')
+    show_plot(j_list, math.log, dmin, dmax, title='in  degree distribution')
     plt.imshow(img, cmap='gray')
     plt.show()
 

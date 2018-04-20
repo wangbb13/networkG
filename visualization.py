@@ -17,49 +17,81 @@ def get_rand_color():
     return ans
 
 
-def show_log_plot(degree_list, dmin=-1, dmax=-1, title='degree distribution chart'):
+def show_plot(degree_list, func, dmin=-1, dmax=-1, title='degree distribution chart'):
     mind = min(degree_list)
     maxd = max(degree_list)
     leng = maxd - mind + 1
-    dgre = [_ for _ in range(mind, maxd+1)]
     freq = [0] * leng
     for d in degree_list:
         freq[d-mind] += 1
+    df_zip = list(zip([_ for _ in range(mind, maxd+1)], freq))
     # actual
-    actual_dgre = []
-    actual_freq = []
-    for i in range(leng):
-        if dgre[i] > 0 and freq[i] > 0:
-            actual_dgre.append(dgre[i])
-            actual_freq.append(freq[i])
-    # print("actual x and y: ")
-    # print(actual_dgre)
-    # print(actual_freq)
-    x = np.asarray([math.log(x) for x in actual_dgre])
-    y = np.asarray([math.log(x) for x in actual_freq])
+    actual_zip = list(filter(lambda t: t[0] > 0 and t[1] > 0, df_zip))
+    x = np.asarray([func(t[0]) for t in actual_zip])
+    y = np.asarray([func(t[1]) for t in actual_zip])
     plt.scatter(x, y, marker='.', color=get_rand_color(), linewidths=2)
     # expected
     if dmin > 0 and dmax > 0:
-        expect_dgre = []
-        expect_freq = []
-        for i in range(leng):
-            # if dgre[i] >= dmin and dgre[i] <= dmax and freq[i] > 0:
-            if dmin <= dgre[i] <= dmax and freq[i] > 0:
-                expect_dgre.append(dgre[i])
-                expect_freq.append(freq[i])
-        # print("expected x and y: ")
-        # print(expect_dgre)
-        # print(expect_freq)
-        x = np.asarray([math.log(x) for x in expect_dgre])
-        y = np.asarray([math.log(x) for x in expect_freq])
+        expect_zip = list(filter(lambda t: dmin <= t[0] <= dmax and t[1] > 0, df_zip))
+        x = np.asarray([func(t[0]) for t in expect_zip])
+        y = np.asarray([func(t[1]) for t in expect_zip])
         plt.scatter(x, y, marker='x', color=get_rand_color(), linewidths=2)
     plt.title(title)
     plt.show()
 
 
-def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=32):
+def get_degree_list(filename, fmt, rows, cols, col_file=''):
+    """
+    :param filename: data file name
+    :param fmt: txt, adj, or csr
+    :param rows: the count of source node
+    :param cols: the count of target node
+    :param col_file: parsing csr format data
+    :return: out_degree_list, in_degree_list
+             {]_degree_list[i]: {} degree of node i
+    """
     if not os.path.exists(filename):
         raise FileNotFoundError('%s is not exist' % filename)
+    if fmt not in ['txt', 'adj', 'csr']:
+        raise Exception('%s is not a supported format (txt, adj, csr)' % fmt)
+    out_degree_list = [0] * rows
+    in_degree_list = [0] * cols
+    if fmt == 'txt':
+        with open(filename, 'r') as f:
+            for line in f:
+                no = [int(x) for x in line.strip().split()]
+                out_degree_list[no[0]] += 1
+                in_degree_list[no[1]] += 1
+    elif fmt == 'adj':
+        with open(filename, 'r') as f:
+            for line in f:
+                no = [int(x) for x in line.strip().split()]
+                out_degree_list[no[0]] += len(no) - 1
+                for j in no[1:]:
+                    in_degree_list[j] += 1
+    else:   # csr
+        if not os.path.exists(col_file):
+            raise FileNotFoundError('%s is not exists for csr format' % col_file)
+        pre_of = 0
+        row_id = 0
+        with open(filename, 'r') as f:
+            for line in f:
+                for c in line.strip().split():
+                    out_degree_list[row_id] += int(c) - pre_of
+                    pre_of = int(c)
+                    row_id += 1
+        with open(col_file, 'r') as f:
+            for line in f:
+                for c in line.strip().split():
+                    in_degree_list[int(c)] += 1
+    return out_degree_list, in_degree_list
+
+
+def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
+    if not os.path.exists(filename):
+        raise FileNotFoundError('%s is not exist' % filename)
+    if fmt not in ['txt', 'adj', 'csr']:
+        raise Exception('%s is not a supported format (txt, adj, csr)' % fmt)
     img_row = min(1000, rows)
     img_col = min(1000, cols)
     row_cr = int(rows / img_row)
@@ -91,7 +123,7 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=32):
                         img_i -= img_i >= img_row
                         img_j -= img_j >= img_col
                         img[img_i, img_j] += unit
-    elif fmt == 'csr':
+    else:   # csr
         if not os.path.exists(col_file):
             raise FileNotFoundError('%s is not exists for csr format' % col_file)
         try:

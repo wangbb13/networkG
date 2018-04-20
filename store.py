@@ -98,7 +98,7 @@ class StoreRelation(OStream):
     0: attr0 attr1 ...
     1: val_group ...
     """
-    def __init__(self, filename, disk, fmt, col_f='', max_col=32):
+    def __init__(self, filename, disk, fmt, col_f='', max_col=128):
         super(StoreRelation, self).__init__(filename, disk)
         self.fmt = fmt
         if fmt not in ['txt', 'adj', 'csr']:
@@ -111,6 +111,7 @@ class StoreRelation(OStream):
         self.row_line_cnt = 0
         self.col_line_cnt = 0
         self.store_max_col = max_col
+        self.cur_col_sum = 0
 
     def close(self):
         self.f_handler.close()
@@ -132,7 +133,8 @@ class StoreRelation(OStream):
 
     def write_csr_ln(self, a_line):
         try:
-            self.f_handler.write(str(a_line[0]) + ' ')
+            self.cur_col_sum += len(a_line[1])
+            self.f_handler.write(str(self.cur_col_sum) + ' ')
             self.row_line_cnt += 1
             if self.row_line_cnt == self.store_max_col:
                 self.f_handler.write('\n')
@@ -140,7 +142,6 @@ class StoreRelation(OStream):
             num = len(a_line[1])
             ite = (str(x) for x in a_line[1])
             first = min(self.store_max_col - self.col_line_cnt, num)
-            self.col_line_cnt += first
             self.col_f_handler.write(' '.join([next(ite) for _ in range(first)]) + ' ')
             if self.col_line_cnt + first == self.store_max_col:
                 self.col_f_handler.write('\n')

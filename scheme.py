@@ -129,6 +129,13 @@ class JudgeLegal(object):
                 raise ConfigError('Overlap in community can not be converted to float. \
                  And the overlap should be in [0,1]')
 
+    @staticmethod
+    def legal_scheme(scheme):
+        if not ('gdb' in scheme and 'node' in scheme and 'relation' in scheme):
+            raise ConfigError('Lack of fields in scheme: gdb, node or relation')
+        if not (isinstance(scheme['node'], list) and isinstance(scheme['relation'], list)):
+            raise ConfigError('The type of node and relation should be list')
+
 
 '''
 class Scheme(object):
