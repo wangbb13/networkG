@@ -93,7 +93,6 @@
     }, {
       "label": "answer",
       "source": "user",
-      "middle": "n-answer",
       "target": "question",
       "in": {"type": "power_law", "lambda": 1.93, "min-d": 1, "max-d": 100},
       "out": {"type": "power_law", "lambda": 1.85, "min-d": 1, "max-d": 200},
@@ -103,7 +102,6 @@
     }, {
       "label": "comment-ans",
       "source": "user",
-      "middle": "n-comment",
       "target": "n-answer",
       "in": {"type": "power_law", "lambda": 1.57, "min-d": 1, "max-d": 1000},
       "out": {"type": "power_law", "lambda": 1.62, "min-d": 1, "max-d": 2000},

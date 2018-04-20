@@ -98,6 +98,7 @@ class StoreRelation(OStream):
     0: attr0 attr1 ...
     1: val_group ...
     """
+    # TODO: generate attr and store them simultaneously
     def __init__(self, filename, disk, fmt, col_f='', max_col=128):
         super(StoreRelation, self).__init__(filename, disk)
         self.fmt = fmt

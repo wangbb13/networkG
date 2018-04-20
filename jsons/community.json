@@ -1,0 +1,23 @@
+{
+  "gdb": "community",
+  "node": [
+    {
+      "label": "user",
+      "amount": 100000
+    }
+  ],
+  "relation": [
+    {
+      "label": "follow",
+      "source": "user",
+      "target": "user",
+      "in": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 300},
+      "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 200},
+      "community": {
+        "amount": 20,
+        "noise": {"threshold": 0.4, "param-c": 0.6},
+        "overlap": 0.1
+      }
+    }
+  ]
+}

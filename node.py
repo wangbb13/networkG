@@ -6,7 +6,7 @@ from utility import RandomData
 
 
 class Node(object):
-    def __init__(self, node, o_stream):
+    def __init__(self, node):
         try:
             JudgeLegal.legal_node(node)
         except ConfigError as e:
@@ -19,7 +19,6 @@ class Node(object):
             self.attr = {}
             for elem in node['attr']:
                 self.attr[elem['key']] = elem['value']
-        self.o_stream = o_stream
         self.node_vec = []
 
     def get_node(self, i):
