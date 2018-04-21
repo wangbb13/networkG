@@ -58,7 +58,9 @@ class Generator(object):
         :return: None
         """
         for rel in self.relation_ins:
-            os.mkdir(os.path.join(self.base_dir, rel.label))
+            rel_path = os.path.join(self.base_dir, rel.label)
+            if not os.path.exists(rel_path):
+                os.mkdir(rel_path)
             if self.format == 'CSR':
                 row_name = 'row_offset.csr'
                 col_name = 'col_index.csr'

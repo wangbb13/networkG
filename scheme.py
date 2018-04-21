@@ -117,13 +117,17 @@ class JudgeLegal(object):
                 raise ConfigError('Lack of fields in community noise: threshold or param-c')
             try:
                 assert float(noise['threshold'])
+                assert float(noise['param-c'])
                 c = float(noise['param-c'])
                 assert 0 <= c <= 1
+                t = float(noise['threshold'])
+                assert 0 <= t <= 1
             except AssertionError:
                 raise ConfigError('Threshold and param-c in noise can not be converted to float. \
-                 And the param-c should be in [0,1]')
+                 And the they should be in [0,1]')
             try:
-                over = float(noise['overlap'])
+                assert float(com['overlap'])
+                over = float(com['overlap'])
                 assert 0 <= over <= 1
             except AssertionError:
                 raise ConfigError('Overlap in community can not be converted to float. \

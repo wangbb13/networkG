@@ -3,7 +3,7 @@
   "node": [
     {
       "label": "user",
-      "amount": 100000
+      "amount": 10000
     }
   ],
   "relation": [

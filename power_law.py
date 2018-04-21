@@ -86,10 +86,10 @@ class NGPowerLaw(object):
 
 
 def test():
-    node = 131072
-    lmd = 1.2
+    node = 1000
+    lmd = 1.15
     dmin = 1
-    dmax = 3600
+    dmax = 50
     import time
     t0 = time.time()
     power_law = NGPowerLaw(lmd, dmin, dmax, node)

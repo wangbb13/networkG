@@ -107,8 +107,10 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                 try:
                     img[img_i, img_j] += unit
                 except IndexError:
-                    img_i -= img_i >= img_row
-                    img_j -= img_j >= img_col
+                    if img_i >= img_row:
+                        img_i = img_row - 1
+                    if img_j >= img_col:
+                        img_j = img_col - 1
                     img[img_i, img_j] += unit
     elif fmt == 'ADJ':
         with open(filename, 'r') as f:
@@ -120,8 +122,10 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                     try:
                         img[img_i, img_j] += unit
                     except IndexError:
-                        img_i -= img_i >= img_row
-                        img_j -= img_j >= img_col
+                        if img_i >= img_row:
+                            img_i = img_row - 1
+                        if img_j >= img_col:
+                            img_j = img_col - 1
                         img[img_i, img_j] += unit
     else:   # csr
         if not os.path.exists(col_file):
@@ -152,8 +156,10 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                             try:
                                 img[img_i, img_j] += unit
                             except IndexError:
-                                img_i -= img_i >= img_row
-                                img_j -= img_j >= img_col
+                                if img_i >= img_row:
+                                    img_i = img_row - 1
+                                if img_j >= img_col:
+                                    img_j = img_col - 1
                                 img[img_i, img_j] += unit
                         remain = record[cnt:]
         finally:

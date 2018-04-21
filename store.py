@@ -123,7 +123,7 @@ class StoreRelation(OStream):
 
     def write_adj_ln(self, a_line):
         try:
-            self.f_handler.write(str(a_line[0]) + ' '.join(list(map(lambda x: str(x), a_line[1]))) + '\n')
+            self.f_handler.write(str(a_line[0]) + ' ' + ' '.join(list(map(lambda x: str(x), a_line[1]))) + '\n')
         except Exception as e:
             self.close()
             raise e
