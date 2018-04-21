@@ -135,6 +135,10 @@ class JudgeLegal(object):
             raise ConfigError('Lack of fields in scheme: gdb, node or relation')
         if not (isinstance(scheme['node'], list) and isinstance(scheme['relation'], list)):
             raise ConfigError('The type of node and relation should be list')
+        if "store-format" not in scheme:
+            raise ConfigError('Lack of a field in scheme: store-format')
+        if scheme['store-format'] not in ['TSV', 'ADJ', 'CSR']:
+            raise ConfigError('%s is not a supported format (TSV, ADJ, CSR)' % scheme['store-format'])
 
 
 '''

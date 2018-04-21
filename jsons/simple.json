@@ -14,5 +14,6 @@
       "in": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 300},
       "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 200}
     }
-  ]
+  ],
+  "store-format": "ADJ"
 }

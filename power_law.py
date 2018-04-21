@@ -29,6 +29,9 @@ class NGPowerLaw(object):
         self.cdf_d = self.get_cdf(self.c)
         self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
 
+    def get_d_type(self):
+        return 'power_law'
+
     def integrate(self):
         if self.lmd == -1:
             return math.log(self.dmax / self.dmin)

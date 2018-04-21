@@ -52,17 +52,17 @@ def get_degree_list(filename, fmt, rows, cols, col_file=''):
     """
     if not os.path.exists(filename):
         raise FileNotFoundError('%s is not exist' % filename)
-    if fmt not in ['txt', 'adj', 'csr']:
+    if fmt not in ['TSV', 'ADJ', 'CSR']:
         raise Exception('%s is not a supported format (txt, adj, csr)' % fmt)
     out_degree_list = [0] * rows
     in_degree_list = [0] * cols
-    if fmt == 'txt':
+    if fmt == 'TSV':
         with open(filename, 'r') as f:
             for line in f:
                 no = [int(x) for x in line.strip().split()]
                 out_degree_list[no[0]] += 1
                 in_degree_list[no[1]] += 1
-    elif fmt == 'adj':
+    elif fmt == 'ADJ':
         with open(filename, 'r') as f:
             for line in f:
                 no = [int(x) for x in line.strip().split()]
@@ -90,7 +90,7 @@ def get_degree_list(filename, fmt, rows, cols, col_file=''):
 def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
     if not os.path.exists(filename):
         raise FileNotFoundError('%s is not exist' % filename)
-    if fmt not in ['txt', 'adj', 'csr']:
+    if fmt not in ['TSV', 'ADJ', 'CSR']:
         raise Exception('%s is not a supported format (txt, adj, csr)' % fmt)
     img_row = min(1000, rows)
     img_col = min(1000, cols)
@@ -98,7 +98,7 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
     col_cr = int(cols / img_col)
     unit = 1 / (row_cr * col_cr)
     img = np.zeros((img_row, img_col))
-    if fmt == 'txt':
+    if fmt == 'TSV':
         with open(filename, 'r') as f:
             for line in f:
                 no = [int(x) for x in line.strip().split()]
@@ -110,7 +110,7 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                     img_i -= img_i >= img_row
                     img_j -= img_j >= img_col
                     img[img_i, img_j] += unit
-    elif fmt == 'adj':
+    elif fmt == 'ADJ':
         with open(filename, 'r') as f:
             for line in f:
                 no = [int(x) for x in line.strip().split()]

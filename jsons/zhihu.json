@@ -120,5 +120,5 @@
     }
   ],
   "query": {},
-  "graph-format": "TSV, CSR, ADJ"
+  "store-format": "TSV, CSR, ADJ"
 }

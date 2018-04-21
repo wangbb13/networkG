@@ -3,12 +3,8 @@
 
 
 class OStream(object):
-    def __init__(self, filename, disk):
+    def __init__(self, filename):
         self.filename = filename
-        self.disk = disk
-
-    def get_disk(self):
-        return self.disk
 
     def get_filename(self):
         return self.filename
@@ -54,14 +50,14 @@ class StoreNode(OStream):
     2: hone beta shanghai
     ...
     """
-    def __init__(self, filename, disk):
-        super(StoreNode, self).__init__(filename, disk)
+    def __init__(self, filename):
+        super(StoreNode, self).__init__(filename)
 
 
 class StoreRelation(OStream):
     """
     relation type(or label): directory name
-    storage format: txt
+    storage format: TSV
     directory
     |---data.txt
     |---attr.txt
@@ -73,7 +69,7 @@ class StoreRelation(OStream):
     1: val_x_y_0 val_x_y_1 ...
     2: ...
 
-    storage format: adj
+    storage format: ADJ
     directory
     |---data.adj
     |---attr.txt
@@ -84,7 +80,7 @@ class StoreRelation(OStream):
     0: attr0 attr1 ... attr_n
     1: val_0_y00_0 ... val_0_y00_n val_0_y01_0 ... val_0_y01_n ...
 
-    storage format: csr
+    storage format: CSR
     directory:
     |---row_offset.csr
     |---col_index.csr
@@ -99,15 +95,15 @@ class StoreRelation(OStream):
     1: val_group ...
     """
     # TODO: generate attr and store them simultaneously
-    def __init__(self, filename, disk, fmt, col_f='', max_col=128):
-        super(StoreRelation, self).__init__(filename, disk)
+    def __init__(self, filename, fmt, col_f='', max_col=128):
+        super(StoreRelation, self).__init__(filename)
         self.fmt = fmt
-        if fmt not in ['txt', 'adj', 'csr']:
-            raise Exception('%s is not a supported format (txt, adj, csr)' % fmt)
-        if fmt == 'csr' and col_f == '':
-            raise Exception('There should be two files for storing data in csr fmt.')
+        if fmt not in ['TSV', 'ADJ', 'CSR']:
+            raise Exception('%s is not a supported format (TSV, ADJ, CSR)' % fmt)
+        if fmt == 'CSR' and col_f == '':
+            raise Exception('There should be two files for storing data in CSR fmt.')
         self.f_handler = open(filename, 'w')
-        if fmt == 'csr':
+        if fmt == 'CSR':
             self.col_f_handler = open(col_f, 'w')
         self.row_line_cnt = 0
         self.col_line_cnt = 0
@@ -169,9 +165,9 @@ class StoreRelation(OStream):
                        type(col_j) = set
         :return: None
         """
-        if self.fmt == 'txt':
+        if self.fmt == 'TSV':
             self.write_txt_ln(a_line)
-        elif self.fmt == 'adj':
+        elif self.fmt == 'ADJ':
             self.write_adj_ln(a_line)
         else:
             self.write_csr_ln(a_line)
@@ -183,10 +179,10 @@ class StoreRelation(OStream):
                          type(col_j) = set
         :return: None
         """
-        if self.fmt == 'txt':
+        if self.fmt == 'TSV':
             for a_line in item_vec:
                 self.write_txt_ln(a_line)
-        elif self.fmt == 'adj':
+        elif self.fmt == 'ADJ':
             for a_line in item_vec:
                 self.write_adj_ln(a_line)
         else:

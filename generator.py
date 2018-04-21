@@ -1,9 +1,12 @@
 # create time : 2018-04-15
 # author : wangbb13
+import os
+import math
 from scheme import JudgeLegal, ConfigError
 from node import Node
 from relation import Relation
 from store import StoreRelation
+from visualization import get_degree_list, show_plot, show_matrix_thumbnail
 
 
 class Generator(object):
@@ -13,6 +16,10 @@ class Generator(object):
             JudgeLegal.legal_scheme(scheme)
         except ConfigError as e:
             raise e
+        self.format = scheme['store-format']
+        self.base_dir = 'data'
+        if not os.path.exists(self.base_dir):
+            os.mkdir(self.base_dir)
         self.node_labels = set()
         self.relation_labels = set()
         self.node_amount = {}
@@ -34,6 +41,7 @@ class Generator(object):
                 assert one['label'] not in self.relation_labels
                 assert one['source'] in self.node_labels
                 assert one['target'] in self.node_labels
+                self.relation_labels.add(one['label'])
                 node1 = self.node_amount[one['source']]
                 node2 = self.node_amount[one['target']]
                 rel = Relation(one, node1, node2)
@@ -49,7 +57,71 @@ class Generator(object):
         just generate data
         :return: None
         """
-        pass
+        for rel in self.relation_ins:
+            os.mkdir(os.path.join(self.base_dir, rel.label))
+            if self.format == 'CSR':
+                row_name = 'row_offset.csr'
+                col_name = 'col_index.csr'
+                row_file = os.path.join(self.base_dir, rel.label, row_name)
+                col_file = os.path.join(self.base_dir, rel.label, col_name)
+                o_stream = StoreRelation(row_file, 'CSR', col_file)
+            else:
+                data_name = 'data.' + self.format.lower()
+                data_file = os.path.join(self.base_dir, rel.label, data_name)
+                o_stream = StoreRelation(data_file, self.format)
+            if rel.has_community:
+                for line in rel.generate_with_com():
+                    o_stream.writeln(line)
+            else:
+                for batch in rel.generate_batch_line():
+                    o_stream.write_batch(batch)
+
+    def statistic_relation_data(self):
+        """
+        show plot & show matrix thumbnail
+        :return:
+        """
+        for rel in self.relation_ins:
+            if self.format == 'CSR':
+                row_name = 'row_offset.csr'
+                col_name = 'col_index.csr'
+                row_file = os.path.join(self.base_dir, rel.label, row_name)
+                col_file = os.path.join(self.base_dir, rel.label, col_name)
+                # show degree distribution
+                out_degree_list, in_degree_list = get_degree_list(row_file, 'CSR', rel.node1, rel.node2, col_file)
+                if rel.out_distribution.get_d_type() == 'power_law':
+                    show_plot(out_degree_list, math.log, rel.out_distribution.dmin, \
+                              rel.out_distribution.dmax, 'out-degree distribution (log scale)')
+                else:
+                    show_plot(out_degree_list, lambda x: x, rel.out_distribution.dmin, \
+                              rel.out_distribution.dmax, 'out-degree distribution (norm scale)')
+                if rel.in_distribution.get_d_type() == 'power_law':
+                    show_plot(in_degree_list, math.log, rel.in_distribution.dmin, \
+                              rel.in_distribution.dmax, 'in-degree distribution (log scale)')
+                else:
+                    show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
+                              rel.in_distribution.dmax, 'in-degree distribution (norm scale)')
+                # show matrix thumbnail
+                show_matrix_thumbnail(row_file, 'CSR', rel.node1, rel.node2, col_file)
+            else:
+                data_name = 'data.' + self.format.lower()
+                data_file = os.path.join(self.base_dir, rel.label, data_name)
+                # show degree distribution
+                out_degree_list, in_degree_list = get_degree_list(data_file, self.format, rel.node1, rel.node2)
+                if rel.out_distribution.get_d_type() == 'power_law':
+                    show_plot(out_degree_list, math.log, rel.out_distribution.dmin, \
+                              rel.out_distribution.dmax, 'out-degree distribution (log scale)')
+                else:
+                    show_plot(out_degree_list, lambda x: x, rel.out_distribution.dmin, \
+                              rel.out_distribution.dmax, 'out-degree distribution (norm scale)')
+                if rel.in_distribution.get_d_type() == 'power_law':
+                    show_plot(in_degree_list, math.log, rel.in_distribution.dmin, \
+                              rel.in_distribution.dmax, 'in-degree distribution (log scale)')
+                else:
+                    show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
+                              rel.in_distribution.dmax, 'in-degree distribution (norm scale)')
+                # show matrix thumbnail
+                show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
 
     def generate_nodes(self):
         pass

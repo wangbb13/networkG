@@ -11,6 +11,9 @@ class NGUniform(object):
         self.davg = round((dmin + dmax)/2)
         self.total_degree = round(node * (dmin + dmax) / 2)
 
+    def get_d_type(self):
+        return 'uniform'
+
     def get_total_degree(self):
         return self.total_degree
 
