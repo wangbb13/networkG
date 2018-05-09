@@ -14,7 +14,7 @@ def get_rand_color():
         if len(c) == 1:
             c = '0' + c
         ans = ans + c
-    return ans
+    return '#232323'
 
 
 def show_plot(degree_list, func, dmin=-1, dmax=-1, title='degree distribution chart'):
@@ -31,11 +31,13 @@ def show_plot(degree_list, func, dmin=-1, dmax=-1, title='degree distribution ch
     y = np.asarray([func(t[1]) for t in actual_zip])
     plt.scatter(x, y, marker='.', color=get_rand_color(), linewidths=2)
     # expected
+    '''
     if dmin > 0 and dmax > 0:
         expect_zip = list(filter(lambda t: dmin <= t[0] <= dmax and t[1] > 0, df_zip))
         x = np.asarray([func(t[0]) for t in expect_zip])
         y = np.asarray([func(t[1]) for t in expect_zip])
         plt.scatter(x, y, marker='x', color=get_rand_color(), linewidths=2)
+    '''
     plt.title(title)
     plt.show()
 
@@ -96,7 +98,6 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
     img_col = min(1000, cols)
     row_cr = int(rows / img_row)
     col_cr = int(cols / img_col)
-    unit = 1 / (row_cr * col_cr)
     img = np.zeros((img_row, img_col))
     if fmt == 'TSV':
         with open(filename, 'r') as f:
@@ -105,13 +106,13 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                 img_i = int(no[0] / row_cr)
                 img_j = int(no[1] / col_cr)
                 try:
-                    img[img_i, img_j] += unit
+                    img[img_i, img_j] += 1
                 except IndexError:
                     if img_i >= img_row:
                         img_i = img_row - 1
                     if img_j >= img_col:
                         img_j = img_col - 1
-                    img[img_i, img_j] += unit
+                    img[img_i, img_j] += 1
     elif fmt == 'ADJ':
         with open(filename, 'r') as f:
             for line in f:
@@ -120,13 +121,13 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                 for col_j in no[1:]:
                     img_j = int(col_j / col_cr)
                     try:
-                        img[img_i, img_j] += unit
+                        img[img_i, img_j] += 1
                     except IndexError:
                         if img_i >= img_row:
                             img_i = img_row - 1
                         if img_j >= img_col:
                             img_j = img_col - 1
-                        img[img_i, img_j] += unit
+                        img[img_i, img_j] += 1
     else:   # csr
         if not os.path.exists(col_file):
             raise FileNotFoundError('%s is not exists for csr format' % col_file)
@@ -154,16 +155,24 @@ def show_matrix_thumbnail(filename, fmt, rows, cols, col_file='', max_col=128):
                         for j in range(cnt):
                             img_j = int(record[j] / col_cr)
                             try:
-                                img[img_i, img_j] += unit
+                                img[img_i, img_j] += 1
                             except IndexError:
                                 if img_i >= img_row:
                                     img_i = img_row - 1
                                 if img_j >= img_col:
                                     img_j = img_col - 1
-                                img[img_i, img_j] += unit
+                                img[img_i, img_j] += 1
                         remain = record[cnt:]
         finally:
             if col_f:
                 col_f.close()
+    for i in range(1000):
+        for j in range(1000):
+            if 0 < img[i, j] < 0.33:
+                img[i, j] = 0.3
+            elif img[i, j] < 0.67:
+                img[i, j] = 0.6
+            else:
+                img[i, j] = 0.9
     plt.imshow(img, cmap='gray')
     plt.show()

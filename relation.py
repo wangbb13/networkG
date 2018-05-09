@@ -49,6 +49,7 @@ class Relation(object):
                 type(col_j) = set
         :return: None
         """
+        all_e = 0
         if not self.has_community:
             return
         com_cnt = self.com_amount
@@ -68,14 +69,14 @@ class Relation(object):
             in_pl = get_distribution(self.rel['in'], col_axis[i])
             block_is_even = col_axis[i] % 2 == 1
             # upper left
-            if i > 0:
+            if over_lap > 0 and i > 0:
                 ul_col = int(col_axis[i-1] * over_lap)
                 ul_row = int(row_axis[i-1] * over_lap)
                 ul_in_pl = get_distribution(self.rel['in'], ul_col)
                 ul_out_pl = get_distribution(self.rel['out'], ul_row)
                 ul_is_even = ul_col % 2 == 1
             # lower right
-            if i < com_cnt-1:
+            if over_lap > 0 and i < com_cnt-1:
                 lr_col = int(col_axis[i+1] * over_lap)
                 lr_row = int(row_axis[i+1] * over_lap)
                 lr_in_pl = get_distribution(self.rel['in'], lr_col)
@@ -102,7 +103,7 @@ class Relation(object):
                             j += col_axis[i]
                         a_line_set.add(j)
                 # add overlap community in upper left
-                if i > 0 and row < ul_row:
+                if over_lap > 0 and i > 0 and row < ul_row:
                     d_over_ul = ul_out_pl.get_d()
                     for _ in range(d_over_ul):
                         j = ul_in_pl.get_j()
@@ -110,16 +111,18 @@ class Relation(object):
                         a_j = start_j - j
                         a_line_set.add(a_j)
                 # add overlap community in lower right
-                if i < com_cnt-1 and row > (row_axis[i] - lr_row):
+                if over_lap > 0 and i < com_cnt-1 and row > (row_axis[i] - lr_row):
                     d_over_lr = lr_out_pl.get_d()
                     for _ in range(d_over_lr):
                         j = lr_in_pl.get_j()
                         j = transform(lr_is_even, j, lr_col-1)
                         a_j = start_j + col_axis[i] + j
                         a_line_set.add(a_j)
+                all_e += len(a_line_set)
                 yield [a_i, a_line_set]
             start_i += row_axis[i]
             start_j += col_axis[i]
+        print('all edges: ', all_e)
 
     def generate_simple(self):
         """
@@ -144,13 +147,16 @@ class Relation(object):
                 type(col_j) = set
         :return: None
         """
+        all_e = 0
         for i in range(self.node1):
             ret = set()
             d_out = self.out_distribution.get_d()
+            all_e += d_out
             for _ in range(d_out):
                 j = self.in_distribution.get_j()
                 ret.add(j)
             yield [i, ret]
+        print('all edges: ', all_e)
 
     def generate_batch_line(self, batch=-1):
         """
@@ -161,6 +167,7 @@ class Relation(object):
         :param batch: number of lines to yield
         :return: None
         """
+        all_e = 0
         if batch == -1:
             batch = int(self.node1 / 10)
         times = int(self.node1 / batch)
@@ -170,6 +177,7 @@ class Relation(object):
             ret = [[0, set()] for _ in range(batch)]
             for i in range(batch):
                 d_out = self.out_distribution.get_d()
+                all_e += d_out
                 for x in range(d_out):
                     j = self.in_distribution.get_j()
                     ret[i][1].add(j)
@@ -179,12 +187,14 @@ class Relation(object):
         ret = [[0, set()] for _ in range(remain)]
         for i in range(remain):
             d_out = self.out_distribution.get_d()
+            all_e += d_out
             for x in range(d_out):
                 j = self.in_distribution.get_j()
                 ret[i][1].add(j)
             ret[i][0] = row
             row += 1
         yield ret
+        print('all edges ', all_e)
 
     def generate_special(self):
         """

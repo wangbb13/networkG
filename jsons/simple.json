@@ -11,8 +11,8 @@
       "label": "follow",
       "source": "user",
       "target": "user",
-      "in": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 300},
-      "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 200}
+      "in": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 600},
+      "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 530}
     }
   ],
   "store-format": "ADJ"

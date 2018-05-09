@@ -10,6 +10,7 @@ class ConfigError(Exception):
 class JudgeLegal(object):
     attr_value_type = {'str', 'time'}
     distribution_type = {'power_law', 'uniform', 'gaussian'}
+    shape_type = {'chain', 'star', 'cycle', 'starchain'}
 
     def __init__(self):
         pass
@@ -49,9 +50,10 @@ class JudgeLegal(object):
         if 'amount' not in node:
             raise ConfigError('Lack of a field in Node: amount')
         try:
-            assert int(node['amount'])
-        except AssertionError:
-            raise ConfigError('The amount value can not convert to int')
+            a = int(node['amount'])
+            assert a > 0
+        except Exception:
+            raise ConfigError('The amount value should be int type and must more than 0')
         if 'attr' in node:
             JudgeLegal.legal_attr(node['attr'])
 
@@ -67,25 +69,39 @@ class JudgeLegal(object):
             if not ('min-d' in d and 'max-d' in d):
                 raise ConfigError('Lack of parameters in power law distribution: mid-d and max-d')
             try:
-                assert float(d['lambda'])
-            except AssertionError:
-                raise ConfigError('The type of lambda should be float')
+                mi = int(d['min-d'])
+                mx = int(d['max-d'])
+                assert mi > 0
+                assert mx > 0
+                assert mx >= mi
+            except Exception:
+                raise ConfigError('The min and max degree should be int type and must more than 0. max-d >= min-d')
+            try:
+                a = float(d['lambda'])
+                assert a >= 1.0
+            except Exception:
+                raise ConfigError('The lambda value should be float type and must more or equal than 1.0')
         elif d['type'] == 'uniform':
             if not ('min-d' in d and 'max-d' in d):
                 raise ConfigError('Lack of parameters in uniform distribution: min or max')
             try:
-                assert int(d['min'])
-                assert int(d['max'])
-            except AssertionError:
-                raise ConfigError('The type of min and max should be int')
+                mi = int(d['min-d'])
+                mx = int(d['max-d'])
+                assert mi > 0
+                assert mx > 0
+                assert mx >= mi
+            except Exception:
+                raise ConfigError('The min and max degree should be int type and must more than 0. max-d >= min-d')
         elif d['type'] == 'gaussian':
             if not ('mu' in d and 'sigma' in d):
                 raise ConfigError('Lack of parameters in gaussian distribution: mu or sigma')
             try:
-                assert float(d['mu'])
-                assert float(d['sigma'])
-            except AssertionError:
-                raise ConfigError('The type of mu and sigma should be float')
+                mu = float(d['mu'])
+                sig = float(d['sigma'])
+                assert mu > 0
+                assert sig > 0
+            except Exception:
+                raise ConfigError('The type of mu and sigma should be float and they must more than 0')
 
     @staticmethod
     def legal_relation(rel):
@@ -108,7 +124,7 @@ class JudgeLegal(object):
             try:
                 assert int(com['amount'])
             except AssertionError:
-                raise ConfigError('The type of amount should be int')
+                raise ConfigError('The type of amount should be int and more than 0')
             # JudgeLegal.legal_distribution(com['distribution'])
             noise = com['noise']
             if not isinstance(noise, dict):
@@ -116,22 +132,72 @@ class JudgeLegal(object):
             if not ('threshold' in noise and 'param-c' in noise):
                 raise ConfigError('Lack of fields in community noise: threshold or param-c')
             try:
-                assert float(noise['threshold'])
-                assert float(noise['param-c'])
                 c = float(noise['param-c'])
                 assert 0 <= c <= 1
                 t = float(noise['threshold'])
                 assert 0 <= t <= 1
-            except AssertionError:
+            except Exception:
                 raise ConfigError('Threshold and param-c in noise can not be converted to float. \
                  And the they should be in [0,1]')
             try:
-                assert float(com['overlap'])
                 over = float(com['overlap'])
                 assert 0 <= over <= 1
-            except AssertionError:
+            except Exception:
                 raise ConfigError('Overlap in community can not be converted to float. \
                  And the overlap should be in [0,1]')
+
+    @staticmethod
+    def legal_workload(wl):
+        if not isinstance(wl, dict):
+            raise ConfigError("The workload config should be a dict")
+        if "amount" not in wl:
+            raise ConfigError("Lack of a field in workload: amount")
+        try:
+            a = int(wl['amount'])
+            assert a > 0
+        except Exception:
+            raise ConfigError('The amount value in workload should be int type and more than 0')
+
+        def interval(attr):
+            if attr not in wl:
+                raise ConfigError('Lack of a field in workload: %s' % attr)
+            attr_v = wl[attr]
+            if not isinstance(attr_v, dict):
+                raise ConfigError('The type of %s should be dict' % attr)
+            if 'min' not in attr or 'max' not in attr_v:
+                raise ConfigError('Lack of fields in workload %s: min or max' % attr)
+            try:
+                mi = int(attr_v['min'])
+                mx = int(attr_v['max'])
+                assert mi >= 0
+                assert mx > 0
+                assert mx >= mi
+            except Exception:
+                raise ConfigError('The min and max value in workload %s should be int type. \
+                min >= 0 and max > 0. max >= min' % attr)
+
+        interval('conjunct')
+        interval('disjunct')
+        interval('length')
+        interval('arity')
+        if 'multiplicity' not in wl:
+            raise ConfigError('Lack of a field in workload: multiplicity')
+        try:
+            a = float(wl['multiplicity'])
+            assert 0 <= a <= 1
+        except Exception:
+            raise ConfigError('The multiplicity value in workload should be float type and in [0,1]')
+        if 'shape' not in wl:
+            raise ConfigError('Lack of a field in workload: shape')
+        shape_v = wl['shape']
+        if not isinstance(shape_v, dict):
+            raise ConfigError('The type of shape value in workload should be dict')
+        for k, v in shape_v.items():
+            try:
+                assert k in JudgeLegal.shape_type
+                assert v == 0 or v == 1
+            except AssertionError:
+                raise ConfigError('%s is not a legal shape in workload. And the value should be 0 or 1.' % k)
 
     @staticmethod
     def legal_scheme(scheme):

@@ -5,6 +5,10 @@
 class OStream(object):
     def __init__(self, filename):
         self.filename = filename
+        self.f_handler = open(filename, 'w')
+
+    def close(self):
+        self.f_handler.close()
 
     def get_filename(self):
         return self.filename
@@ -32,6 +36,14 @@ class OStream(object):
         :return: None
         """
         pass
+
+
+class StoreQuery(OStream):
+    def __init__(self, filename):
+        super(StoreQuery, self).__init__(filename)
+
+    def writeln(self, a_line):
+        self.f_handler.write(a_line)
 
 
 class StoreNode(OStream):
@@ -102,16 +114,12 @@ class StoreRelation(OStream):
             raise Exception('%s is not a supported format (TSV, ADJ, CSR)' % fmt)
         if fmt == 'CSR' and col_f == '':
             raise Exception('There should be two files for storing data in CSR fmt.')
-        self.f_handler = open(filename, 'w')
         if fmt == 'CSR':
             self.col_f_handler = open(col_f, 'w')
         self.row_line_cnt = 0
         self.col_line_cnt = 0
         self.store_max_col = max_col
         self.cur_col_sum = 0
-
-    def close(self):
-        self.f_handler.close()
 
     def write_txt_ln(self, a_line):
         try:

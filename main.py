@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import time
 from generator import Generator
 
 
@@ -14,8 +15,14 @@ def main():
     with open(filename, 'r') as f:
         scheme = json.load(f)
     gen = Generator(scheme)
+    start_time = time.time()
     gen.generate_relations()
-    gen.statistic_relation_data()
+    end_time = time.time()
+    secs = end_time - start_time
+    mins = secs / 60
+    hour = mins / 60
+    print('run time: %.3f seconds [%.3f minutes, %.3f hours]' % (secs, mins, hour))
+    # gen.statistic_relation_data()
 
 
 if __name__ == '__main__':

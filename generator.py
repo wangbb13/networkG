@@ -73,10 +73,15 @@ class Generator(object):
                 o_stream = StoreRelation(data_file, self.format)
             if rel.has_community:
                 for line in rel.generate_with_com():
-                    o_stream.writeln(line)
+                    pass
+                    # o_stream.writeln(line)
             else:
                 for batch in rel.generate_batch_line():
-                    o_stream.write_batch(batch)
+                    pass
+                    # o_stream.write_batch(batch)
+                # for line in rel.generate_one_line():
+                    # pass
+                    # o_stream.writeln(line)
 
     def statistic_relation_data(self):
         """
@@ -93,16 +98,16 @@ class Generator(object):
                 out_degree_list, in_degree_list = get_degree_list(row_file, 'CSR', rel.node1, rel.node2, col_file)
                 if rel.out_distribution.get_d_type() == 'power_law':
                     show_plot(out_degree_list, math.log, rel.out_distribution.dmin, \
-                              rel.out_distribution.dmax, 'out-degree distribution (log scale)')
+                              rel.out_distribution.dmax, 'out-degree distribution')
                 else:
                     show_plot(out_degree_list, lambda x: x, rel.out_distribution.dmin, \
-                              rel.out_distribution.dmax, 'out-degree distribution (norm scale)')
+                              rel.out_distribution.dmax, 'out-degree distribution')
                 if rel.in_distribution.get_d_type() == 'power_law':
                     show_plot(in_degree_list, math.log, rel.in_distribution.dmin, \
-                              rel.in_distribution.dmax, 'in-degree distribution (log scale)')
+                              rel.in_distribution.dmax, 'in-degree distribution')
                 else:
                     show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
-                              rel.in_distribution.dmax, 'in-degree distribution (norm scale)')
+                              rel.in_distribution.dmax, 'in-degree distribution')
                 # show matrix thumbnail
                 show_matrix_thumbnail(row_file, 'CSR', rel.node1, rel.node2, col_file)
             else:
@@ -112,16 +117,16 @@ class Generator(object):
                 out_degree_list, in_degree_list = get_degree_list(data_file, self.format, rel.node1, rel.node2)
                 if rel.out_distribution.get_d_type() == 'power_law':
                     show_plot(out_degree_list, math.log, rel.out_distribution.dmin, \
-                              rel.out_distribution.dmax, 'out-degree distribution (log scale)')
+                              rel.out_distribution.dmax, 'out-degree distribution')
                 else:
                     show_plot(out_degree_list, lambda x: x, rel.out_distribution.dmin, \
-                              rel.out_distribution.dmax, 'out-degree distribution (norm scale)')
+                              rel.out_distribution.dmax, 'out-degree distribution')
                 if rel.in_distribution.get_d_type() == 'power_law':
                     show_plot(in_degree_list, math.log, rel.in_distribution.dmin, \
-                              rel.in_distribution.dmax, 'in-degree distribution (log scale)')
+                              rel.in_distribution.dmax, 'in-degree distribution')
                 else:
                     show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
-                              rel.in_distribution.dmax, 'in-degree distribution (norm scale)')
+                              rel.in_distribution.dmax, 'in-degree distribution')
                 # show matrix thumbnail
                 show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
 
