@@ -1,6 +1,7 @@
 # create time : 2018-05-06
 # author : wangbb13
 from collections import deque
+from workload import Workload
 
 
 class Label(object):
@@ -12,6 +13,16 @@ class Label(object):
             self.reverse = True
         self.name = name
 
+    def is_reverse(self):
+        return self.reverse
+
+    def to_str(self, var=True):
+        if var:
+            prefix = Workload.edge_var
+            return prefix + self.id
+        else:
+            return self.name
+
 
 class Disjunct(object):
     def __init__(self):
@@ -22,6 +33,11 @@ class Disjunct(object):
 
     def size(self):
         return len(self.labels)
+
+    def to_cypher_one(self):
+        if self.size() == 0:
+            return ''
+        return self.labels[0].to_str()
 
 
 class Conjunct(object):
@@ -46,6 +62,34 @@ class Conjunct(object):
     def set_target(self, tgt):
         self.target = tgt
 
+    def to_cypher(self):
+        if self.size() == 0:
+            return ''
+        prefix = Workload.node_var
+        where_cond = []
+        source = self.source
+        target = self.target
+        if source[0] != prefix:
+            where_cond.append('id(var' + self.source + ') = ' + self.source)
+            source = 'var' + source
+        if target[0] != prefix:
+            where_cond.append('id(var' + self.target + ') = ' + self.target)
+            target = 'var' + target
+        where_clause = ' AND '.join(where_cond)
+        if self.star:
+            content = '(%s)-[:%s*]->(%s)' % \
+                      (source, '|'.join([disj.to_cypher_one() for disj in self.disjuncts]), target)
+        else:
+            disj = self.disjuncts[0]
+            elem = []
+            for label in disj.lebels():
+                if label.is_reverse():
+                    elem.append('<-[:' + label.to_str() + ']-')
+                else:
+                    elem.append('-[:' + label.to_str() + ']->')
+            content = '(' + source + ')' + '()'.join(elem) + '(' + target + ')'
+        return content, where_clause
+
 
 class Body(object):
     def __init__(self):
@@ -56,6 +100,12 @@ class Body(object):
 
     def size(self):
         return len(self.conjuncts)
+
+    def to_cypher(self):
+        if self.size() == 0:
+            return ''
+        conj_res = [conj.to_cypher() for conj in self.conjuncts]
+        return ', '.join([t[0] for t in conj_res]), ' AND '.join([t[1] for t in conj_res])
 
 
 class Query(object):
@@ -71,3 +121,22 @@ class Query(object):
 
     def size(self):
         return self.body.size()
+
+    def to_cypher(self):
+        if self.size() == 0:
+            return ''
+        output_var = ', '.join(self.vars)
+        b_content, where_clause = self.body.to_cypher()
+        ans = 'MATCH ' + b_content
+        if where_clause:
+             ans += ' WHERE ' + where_clause
+        if not output_var:
+            ans += ' RETURN "true" LIMIT 1'
+        else:
+            ans += ' RETURN DISTINCT ' + output_var
+        ans += ';'
+        return ans
+
+    def translate(self, ql='cypher'):
+        if ql == 'cypher':
+            return self.to_cypher()
