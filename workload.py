@@ -1,26 +1,18 @@
 # create time : 2018-05-05
 # author : wangbb13
 import random
-from scheme import JudgeLegal, ConfigError
 from utility import bin_search
 from headers import Label, Disjunct, Conjunct, Body, Query
+from utility import SomeVar
 
 
 class Workload(object):
-    max_val = 0xffffffff
-    node_var = 'v'
-    edge_var = 'e'
-
     def __init__(self, node_list, rel_list, workload):
         """
         :param node_list: [node_type, ...] list of string
         :param rel_list:  [rel_type, ...] list of string
         :param workload:  dict, config info
         """
-        try:
-            JudgeLegal.legal_workload(workload)
-        except ConfigError as e:
-            raise e
         self.workload = workload
         self.node_list = list(set(node_list))
         self.rel_list = list(set(rel_list))
@@ -54,7 +46,7 @@ class Workload(object):
 
     @staticmethod
     def floyd(matrix):
-        max_val = Workload.max_val
+        max_val = SomeVar.max_val
         size = len(matrix)
         for i in range(size):
             for j in range(size):
@@ -100,24 +92,24 @@ class Workload(object):
     def generate_random_path(self, matrix, first_node, length, star):
         g = self.graph
         current_node = first_node
-        size = len(g)
-        path = [0 for _ in range(2*size + 1)]
+        path = [0 for _ in range(2*length + 1)]
         if current_node < 0:
+            size = len(g)
             t_l = [0 for _ in range(size)]
             t_l[0] = matrix[length][0]
             for i in range(1, size):
                 t_l[i] = t_l[i-1] + matrix[length][i]
-            current_node = bin_search(t_l, random.randint(0, t_l[size-1]))
+            current_node = bin_search(t_l, random.randint(1, t_l[size-1]))
         idx = 0
         path[idx] = current_node
         idx += 1
-        for i in range(size, 0, -1):
+        for i in range(length, 0, -1):
             if current_node in g[current_node] and random.random() <= star:
                 path[idx] = 1
                 path[idx+1] = current_node
                 idx += 2
             else:
-                rand_num = random.randint(0, matrix[i][current_node])
+                rand_num = random.randint(1, matrix[i][current_node])
                 acc = 0
                 for j in g[current_node]:
                     acc += matrix[i-1][j]
@@ -138,7 +130,7 @@ class Workload(object):
             for j in range(m):
                 for _, s in aut[j].items():
                     for t in s:
-                        mat[i][j] = mat[i-1][t]
+                        mat[i][j] += mat[i-1][t]
         return mat
 
     def generate_random_path_2(self, mat, start_node, leng, max_leng):
@@ -174,25 +166,36 @@ class Workload(object):
     def generate_random_disjunct(self, source, target, leng, max_leng):
         mat = self.calc_paths(max_leng, target)
         path = self.generate_random_path_2(mat, source, leng, max_leng)
+        if not path:
+            return None
         ret = Disjunct()
         for e in path:
             if e < 0:
-                x = Label(e, self.node_list[-e - 1])
+                x = Label(e, self.rel_list[-e - 1])
                 ret.add(x)
             else:
-                x = Label(e, self.node_list[e])
+                x = Label(e, self.rel_list[e])
                 ret.add(x)
         return ret
 
     def generate_random_conjunct(self, source, target):
         disj = self.workload['disjunct']
         leng = self.workload['length']
-        n_disj = random.randint(disj['min'], disj['max'])
         ret = Conjunct()
-        for _ in range(n_disj):
-            length = random.randint(leng['min'], leng['max'])
-            x = self.generate_random_disjunct(source, target, length, leng['max'])
-            ret.add(x)
+        for i in range(SomeVar.gen_query_max_try):
+            n_disj = random.randint(disj['min'], disj['max'])
+            flag = False
+            for _ in range(n_disj):
+                length = random.randint(leng['min'], leng['max'])
+                x = self.generate_random_disjunct(source, target, length, leng['max'])
+                if not x:
+                    flag = True
+                    break
+                ret.add(x)
+            if not flag:
+                break
+            if flag and i == SomeVar.gen_query_max_try-1:
+                return None
         return ret
 
     @staticmethod
@@ -202,10 +205,10 @@ class Workload(object):
         seq = list(range(arity))
         random.shuffle(seq)
         for v in seq:
-            query.add(Workload.node_var + str(v))
+            query.add(SomeVar.node_var + str(v))
 
     def generate_chain(self):
-        prefix = Workload.node_var
+        prefix = SomeVar.node_var
         query = Query(Body())
         n_conjs = random.randint(self.workload['conjunct']['min'], self.workload['conjunct']['max'])
         path_mat = self.number_of_paths(n_conjs)
@@ -230,7 +233,7 @@ class Workload(object):
         return query
 
     def generate_star(self):
-        prefix = Workload.node_var
+        prefix = SomeVar.node_var
         mult = self.workload['multiplicity']
         query = Query(Body())
         n_conjs = random.randint(self.workload['conjunct']['min'], self.workload['conjunct']['max'])
@@ -264,7 +267,7 @@ class Workload(object):
         return query
 
     def generate_cycle(self):
-        prefix = Workload.node_var
+        prefix = SomeVar.node_var
         mult = self.workload['multiplicity']
         query = Query(Body())
         n_conjs = random.randint(self.workload['conjunct']['min'], self.workload['conjunct']['max'])
@@ -308,7 +311,7 @@ class Workload(object):
         return query
 
     def generate_starchain(self):
-        prefix = Workload.node_var
+        prefix = SomeVar.node_var
         mult = self.workload['multiplicity']
         query = Query(Body())
         n_conjs = random.randint(self.workload['conjunct']['min'], self.workload['conjunct']['max'])

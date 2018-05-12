@@ -16,12 +16,15 @@ def main():
         scheme = json.load(f)
     gen = Generator(scheme)
     start_time = time.time()
-    gen.generate_relations()
+    # do something: generate node, relation and queries
+    # gen.generate_relations()
+    # gen.generate_nodes()
+    gen.generate_query()
     end_time = time.time()
     secs = end_time - start_time
     mins = secs / 60
     hour = mins / 60
-    print('run time: %.3f seconds [%.3f minutes, %.3f hours]' % (secs, mins, hour))
+    print('total run time: %.3f seconds [%.3f minutes, %.3f hours]' % (secs, mins, hour))
     # gen.statistic_relation_data()
 
 

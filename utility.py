@@ -34,10 +34,18 @@ def get_json(filename):
         return ret
 
 
+class SomeVar(object):
+    max_val = 0xffffffff
+    node_var = 'v'
+    edge_var = 'e'
+    gen_query_max_try = 10
+
+
 class RandomData(object):
     time_format = '%Y-%m-%d %H:%M:%S.%f'
     character_set = list('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#_-.')
     character_num = len(character_set)
+    unknown = 'null'
 
     @staticmethod
     def rand_str(length=0):
@@ -59,6 +67,44 @@ class RandomData(object):
             seconds += 86400
         time_rand = timedelta(random.randint(0, days-1), random.randint(0, seconds))
         return start_time + time_rand
+
+    @staticmethod
+    def rand_date(time_delta=None):
+        # TODO
+        pass
+
+    @staticmethod
+    def rand_email():
+        # TODO
+        pass
+
+    @staticmethod
+    def rand_lang():
+        # TODO
+        pass
+
+    @staticmethod
+    def rand_attr(one_attr):
+        val = one_attr['value']
+        if not val['range']:
+            return random.choice(val['range'])
+        else:
+            if val['type'] == 'str':
+                return RandomData.rand_str()
+            elif val['type'] == 'time':
+                return RandomData.rand_time()
+            elif val['type'] == 'date':
+                return RandomData.rand_date()
+            elif val['type'] == 'email':
+                return RandomData.rand_email()
+            elif val['type'] == 'lang':
+                return RandomData.rand_lang()
+            else:
+                return RandomData.unknown
+
+    @staticmethod
+    def rand_attrs(attr):
+        return ' '.join([RandomData.rand_attr(one) for one in attr])
 
 
 def transform(is_even, j, last_j):

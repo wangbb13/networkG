@@ -14,11 +14,12 @@ class Node(object):
         self.has_attr = False
         self.label = str(node['label'])
         self.amount = int(node['amount'])
+        self.attr = {}
         if 'attr' in node:
             self.has_attr = True
-            self.attr = {}
-            for elem in node['attr']:
-                self.attr[elem['key']] = elem['value']
+            self.attr = node['attr']
+            # for elem in node['attr']:
+            #     self.attr[elem['key']] = elem['value']
         self.node_vec = []
 
     def get_node(self, i):

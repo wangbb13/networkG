@@ -1,7 +1,7 @@
 # create time : 2018-05-06
 # author : wangbb13
 from collections import deque
-from workload import Workload
+from utility import SomeVar
 
 
 class Label(object):
@@ -18,8 +18,8 @@ class Label(object):
 
     def to_str(self, var=True):
         if var:
-            prefix = Workload.edge_var
-            return prefix + self.id
+            prefix = SomeVar.edge_var
+            return prefix + str(self.id)
         else:
             return self.name
 
@@ -65,7 +65,7 @@ class Conjunct(object):
     def to_cypher(self):
         if self.size() == 0:
             return ''
-        prefix = Workload.node_var
+        prefix = SomeVar.node_var
         where_cond = []
         source = self.source
         target = self.target
@@ -82,7 +82,7 @@ class Conjunct(object):
         else:
             disj = self.disjuncts[0]
             elem = []
-            for label in disj.lebels():
+            for label in disj.labels:
                 if label.is_reverse():
                     elem.append('<-[:' + label.to_str() + ']-')
                 else:
@@ -103,9 +103,9 @@ class Body(object):
 
     def to_cypher(self):
         if self.size() == 0:
-            return ''
+            return '', ''
         conj_res = [conj.to_cypher() for conj in self.conjuncts]
-        return ', '.join([t[0] for t in conj_res]), ' AND '.join([t[1] for t in conj_res])
+        return ', '.join([t[0] for t in conj_res]), ' AND '.join([t[1] for t in conj_res if t[1]])
 
 
 class Query(object):

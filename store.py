@@ -1,5 +1,6 @@
 # create time: 2018-04-13
 # author: wangbb13
+from utility import RandomData
 
 
 class OStream(object):
@@ -46,7 +47,8 @@ class StoreQuery(OStream):
         self.f_handler.write(a_line)
 
 
-class StoreNode(OStream):
+class StoreAttr(OStream):
+    attr_separate = ';'
     """
     storage format:
     node type: file name
@@ -60,10 +62,49 @@ class StoreNode(OStream):
     0: name nickname city
     1: ming alpha beijing
     2: hone beta shanghai
+
+    for relation:
+    txt:
+    attr.txt:
+    0: attr0 attr1 ...
+    1: val_x_y_0 val_x_y_1 ...
+    2: ...
+
+    adj:
+    attr.adj:
+    0: attr0 attr1 ... attr_n
+    1: val_0_y00_0 ... val_0_y00_n; val_0_y01_0 ... val_0_y01_n ...
+
+    csr:
+    attr.csr:
+    0: attr0 attr1 ...
+    1: val_group ; ...
     ...
     """
-    def __init__(self, filename):
-        super(StoreNode, self).__init__(filename)
+    def __init__(self, filename, attr, max_col=128):
+        super(StoreAttr, self).__init__(filename)
+        self.attr = attr
+        self.f_handler.write(' '.join([t['key'] for t in attr]) + '\n')
+        self.csr_max_col = max_col
+
+    def writeln(self, a_line):
+        if not self.attr:
+            return
+        n = int(a_line)
+        if n == -1:
+            n = self.csr_max_col
+        self.f_handler.write(StoreAttr.attr_separate.join([RandomData.rand_attrs(self.attr) for _ in range(n)]))
+        self.f_handler.write('\n')
+
+    def write_batch(self, item_vec, every_size=1):
+        if not self.attr:
+            return
+        if isinstance(item_vec, list):
+            for i in item_vec:
+                self.writeln(item_vec[i])
+        else:
+            for i in range(int(item_vec)):
+                self.writeln(every_size)
 
 
 class StoreRelation(OStream):
@@ -84,11 +125,11 @@ class StoreRelation(OStream):
     storage format: ADJ
     directory
     |---data.adj
-    |---attr.txt
-    data.txt:
+    |---attr.adj
+    data.adj:
     0: source_node_id_0 target_node_id_y00 target_node_id_y01 ...
     1: source_node_id_1 ...
-    attr.txt:
+    attr.adj:
     0: attr0 attr1 ... attr_n
     1: val_0_y00_0 ... val_0_y00_n val_0_y01_0 ... val_0_y01_n ...
 
@@ -96,13 +137,13 @@ class StoreRelation(OStream):
     directory:
     |---row_offset.csr
     |---col_index.csr
-    |---attr.txt
+    |---attr.csr
     p.s. there are at most {max_col} numbers(or attr group) per line.
     row_offset.csr:
     number ...
     col_index.csr:
     number ...
-    attr.txt:
+    attr.csr:
     0: attr0 attr1 ...
     1: val_group ...
     """

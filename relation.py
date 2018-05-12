@@ -35,11 +35,12 @@ class Relation(object):
             self.overlap = commu['overlap']
             self.has_community = True
         self.has_attr = False
+        self.attr = {}
         if 'attr' in rel:
             self.has_attr = True
-            self.attr = {}
-            for elem in rel['attr']:
-                self.attr[elem['key']] = elem['value']
+            self.attr = rel['attr']
+            # for elem in rel['attr']:
+            #     self.attr[elem['key']] = elem['value']
 
     def generate_with_com(self):
         """

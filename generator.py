@@ -5,8 +5,10 @@ import math
 from scheme import JudgeLegal, ConfigError
 from node import Node
 from relation import Relation
-from store import StoreRelation
+from store import StoreRelation, StoreAttr
 from visualization import get_degree_list, show_plot, show_matrix_thumbnail
+from workload import Workload
+from translate import Translate
 
 
 class Generator(object):
@@ -25,6 +27,8 @@ class Generator(object):
         self.node_amount = {}
         self.node_ins = []
         self.relation_ins = []
+        self.node_attr = {}
+        self.rel_attr = {}
         try:
             for one in scheme['node']:
                 node = Node(one)
@@ -51,6 +55,12 @@ class Generator(object):
         except AssertionError:
             raise ConfigError('The relation label can not be duplicate. \
              And the source (or target, middle) should be in node labels.')
+        if 'workload' in scheme:
+            try:
+                JudgeLegal.legal_workload(scheme['workload'])
+            except ConfigError as e:
+                raise e
+            self.workload = scheme['workload']
 
     def generate_relations(self):
         """
@@ -67,21 +77,24 @@ class Generator(object):
                 row_file = os.path.join(self.base_dir, rel.label, row_name)
                 col_file = os.path.join(self.base_dir, rel.label, col_name)
                 o_stream = StoreRelation(row_file, 'CSR', col_file)
+                attr_file = os.path.join(self.base_dir, rel.label, 'attr.csr')
             else:
                 data_name = 'data.' + self.format.lower()
                 data_file = os.path.join(self.base_dir, rel.label, data_name)
                 o_stream = StoreRelation(data_file, self.format)
+                attr_file = os.path.join(self.base_dir, rel.label, 'attr.' + self.format.lower())
+            attr_stream = StoreAttr(attr_file, rel.attr)
             if rel.has_community:
                 for line in rel.generate_with_com():
-                    pass
-                    # o_stream.writeln(line)
+                    o_stream.writeln(line)
+                    attr_stream.writeln(len(line))
             else:
                 for batch in rel.generate_batch_line():
-                    pass
-                    # o_stream.write_batch(batch)
+                    o_stream.write_batch(batch)
+                    attr_stream.write_batch([len(x) for x in batch])
                 # for line in rel.generate_one_line():
-                    # pass
                     # o_stream.writeln(line)
+                    # attr_stream.writeln(len(line))
 
     def statistic_relation_data(self):
         """
@@ -131,4 +144,19 @@ class Generator(object):
                 show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
 
     def generate_nodes(self):
-        pass
+        node_path = os.path.join(self.base_dir, 'node')
+        if not os.path.exists(node_path):
+            os.makedirs(node_path)
+        for node in self.node_ins:
+            attr_file = os.path.join(node_path, node.label + '.txt')
+            o_stream = StoreAttr(attr_file, node.attr)
+            o_stream.write_batch(node.amount)
+
+    def generate_query(self):
+        if 'workload' in self.scheme:
+            rel_list = [(x.source, x.target, x.label) for x in self.relation_ins]
+            wl = Workload(list(self.node_labels), rel_list, self.workload)
+            queries = wl.generate_workload()
+            filename = 'query.cypher'
+            tl = Translate(filename)
+            tl.translate(queries)

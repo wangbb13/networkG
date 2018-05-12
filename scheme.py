@@ -8,7 +8,7 @@ class ConfigError(Exception):
 
 
 class JudgeLegal(object):
-    attr_value_type = {'str', 'time'}
+    attr_value_type = {'str', 'time', 'date', 'email', 'lang'}
     distribution_type = {'power_law', 'uniform', 'gaussian'}
     shape_type = {'chain', 'star', 'cycle', 'starchain'}
 
@@ -36,7 +36,7 @@ class JudgeLegal(object):
                 raise ConfigError('The type of value should be dict')
             if not ('type' in one['value'] and 'range' in one['value']):
                 raise ConfigError('Lack of fields in value: type or range')
-            if JudgeLegal.legal_attr_val_type(one['value']['type']):
+            if not JudgeLegal.legal_attr_val_type(one['value']['type']):
                 raise ConfigError('Legal value type is: %s' % str(JudgeLegal.attr_value_type))
             if not (isinstance(one['value']['range'], list) or one['value']['range'] is None):
                 raise ConfigError('The range of value should be a list or null')
@@ -87,7 +87,7 @@ class JudgeLegal(object):
             try:
                 mi = int(d['min-d'])
                 mx = int(d['max-d'])
-                assert mi > 0
+                assert mi >= 0
                 assert mx > 0
                 assert mx >= mi
             except Exception:
@@ -164,7 +164,7 @@ class JudgeLegal(object):
             attr_v = wl[attr]
             if not isinstance(attr_v, dict):
                 raise ConfigError('The type of %s should be dict' % attr)
-            if 'min' not in attr or 'max' not in attr_v:
+            if 'min' not in attr_v or 'max' not in attr_v:
                 raise ConfigError('Lack of fields in workload %s: min or max' % attr)
             try:
                 mi = int(attr_v['min'])

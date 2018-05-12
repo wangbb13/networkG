@@ -1,0 +1,135 @@
+{
+  "gdb": "social",
+  "node": [
+    {
+      "label": "person",
+      "amount": 10000,
+      "attr": [
+        {"key": "name", "value": {"type": "str", "range": null}},
+        {"key": "gender", "value": {"type": "str", "range": ["male", "female"]}},
+        {"key": "birthday", "value": {"type": "date", "range": null}},
+        {"key": "email", "value": {"type": "email", "range": null}}
+      ]
+    }, {
+      "label": "university",
+      "amount": 100
+    }, {
+      "label": "company",
+      "amount": 1000
+    }, {
+      "label": "city",
+      "amount": 300
+    }, {
+      "label": "country",
+      "amount": 200
+    }, {
+      "label": "continent",
+      "amount": 7
+    }, {
+      "label": "forum",
+      "amount": 20,
+      "attr": [
+        {"key": "tag", "value": {"type": "str", "range": null}}
+      ]
+    }, {
+      "label": "post",
+      "amount": 1000,
+      "attr": [
+        {"key": "content", "value": {"type": "str", "range": null}},
+        {"key": "language", "value": {"type": "lang", "range": null}},
+        {"key": "img-file", "value": {"type": "str", "range": null}}
+      ]
+    }, {
+      "label": "message",
+      "amount": 5000,
+      "attr": [
+        {"key": "content", "value": {"type": "str", "range": null}}
+      ]
+    }
+  ],
+  "relation": [
+    {
+      "label": "knows",
+      "source": "person",
+      "target": "person",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 200},
+      "out": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 150}
+    }, {
+      "label": "live-in",
+      "source": "person",
+      "target": "city",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 10, "max-d": 100},
+      "out": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }, {
+      "label": "study-at",
+      "source": "person",
+      "target": "university",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 200},
+      "out": {"type": "uniform", "min-d": 0, "max-d": 3}
+    }, {
+      "label": "work-at",
+      "source": "person",
+      "target": "company",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 100},
+      "out": {"type": "uniform", "min-d": 0, "max-d": 3}
+    }, {
+      "label": "send",
+      "source": "person",
+      "target": "post",
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1},
+      "out": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 20}
+    }, {
+      "label": "likes",
+      "source": "person",
+      "target": "message",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 300},
+      "out": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 100}
+    }, {
+      "label": "locate-in",
+      "source": "university",
+      "target": "city",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 6},
+      "out": {"type": "uniform", "min-d": 0, "max-d": 1}
+    }, {
+      "label": "operate-in",
+      "source": "company",
+      "target": "country",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 20},
+      "out": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }, {
+      "label": "is-in",
+      "source": "city",
+      "target": "country",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 10},
+      "out": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }, {
+      "label": "geo-in",
+      "source": "country",
+      "target": "continent",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 10},
+      "out": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }, {
+      "label": "has-moderator",
+      "source": "forum",
+      "target": "person",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 3},
+      "out": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }, {
+      "label": "has-member",
+      "source": "forum",
+      "target": "person",
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 2},
+      "out": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 100}
+    }
+  ],
+  "store-format": "ADJ",
+  "workload": {
+    "amount": 50,
+    "conjunct": {"min": 3, "max": 4},
+    "disjunct": {"min": 1, "max": 3},
+    "length": {"min": 1, "max": 4},
+    "multiplicity": 0.5,
+    "arity": {"min": 0, "max": 4},
+    "shape": {"chain": 1, "star": 1, "cycle": 1, "starchain": 1}
+  }
+}
