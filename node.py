@@ -22,6 +22,9 @@ class Node(object):
             #     self.attr[elem['key']] = elem['value']
         self.node_vec = []
 
+    def add_amount(self, more):
+        self.amount += more
+
     def get_node(self, i):
         return self.node_vec[i+1]
 

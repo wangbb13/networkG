@@ -11,7 +11,7 @@ def bin_search(vec, key):
     """
     :param vec: search in vec
     :param key: search value
-    :return: index i, where vec[i] >= key > vec[i-1] or i == len(vec)
+    :return: index i, where vec[i-1] < key <= vec[i] or i == len(vec)
     """
     left = 0
     right = len(vec)

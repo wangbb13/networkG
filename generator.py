@@ -45,10 +45,22 @@ class Generator(object):
                 assert one['label'] not in self.relation_labels
                 assert one['source'] in self.node_labels
                 assert one['target'] in self.node_labels
+                try:
+                    JudgeLegal.legal_relation(one)
+                except ConfigError as e:
+                    raise e
+                edge_num = one['edges']
                 self.relation_labels.add(one['label'])
                 node1 = self.node_amount[one['source']]
                 node2 = self.node_amount[one['target']]
-                rel = Relation(one, node1, node2)
+                if edge_num > node1 * node2:
+                    edge_num = int(node1 * node2 / 100)
+                rel = Relation(one, node1, node2, edge_num)
+                ext = rel.get_extend()
+                if ext > 0:
+                    for one_ins in self.node_ins:
+                        if one_ins.label == one['source']:
+                            one_ins.add_amount(ext)
                 self.relation_ins.append(rel)
         except ConfigError as e:
             raise e
@@ -84,17 +96,26 @@ class Generator(object):
                 o_stream = StoreRelation(data_file, self.format)
                 attr_file = os.path.join(self.base_dir, rel.label, 'attr.' + self.format.lower())
             attr_stream = StoreAttr(attr_file, rel.attr)
+            rel_edges = 0
             if rel.has_community:
                 for line in rel.generate_with_com():
                     o_stream.writeln(line)
-                    attr_stream.writeln(len(line))
+                    length = len(line[1])
+                    attr_stream.writeln(length)
+                    rel_edges += length
             else:
                 for batch in rel.generate_batch_line():
                     o_stream.write_batch(batch)
-                    attr_stream.write_batch([len(x) for x in batch])
+                    length = [len(x[1]) for x in batch]
+                    attr_stream.write_batch(length)
+                    rel_edges += sum(length)
                 # for line in rel.generate_one_line():
                     # o_stream.writeln(line)
-                    # attr_stream.writeln(len(line))
+                    # length = len(line[1])
+                    # attr_stream.writeln(length)
+                    # rel_edges += length
+            print('(%s)-[:%s]->(%s)  expect edges : %s, actual edges : %s ' % \
+                  (rel.source, rel.label, rel.target, rel.edge_num, rel_edges))
 
     def statistic_relation_data(self):
         """
@@ -141,7 +162,7 @@ class Generator(object):
                     show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
                               rel.in_distribution.dmax, 'in-degree distribution')
                 # show matrix thumbnail
-                show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
+                # show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
 
     def generate_nodes(self):
         node_path = os.path.join(self.base_dir, 'node')
@@ -151,6 +172,7 @@ class Generator(object):
             attr_file = os.path.join(node_path, node.label + '.txt')
             o_stream = StoreAttr(attr_file, node.attr)
             o_stream.write_batch(node.amount)
+            print('(%s) actual count : %s ' % (node.label, node.amount))
 
     def generate_query(self):
         if 'workload' in self.scheme:

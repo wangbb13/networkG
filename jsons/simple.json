@@ -3,7 +3,7 @@
   "node": [
     {
       "label": "user",
-      "amount": 10000
+      "amount": 1000
     }
   ],
   "relation": [
@@ -11,8 +11,9 @@
       "label": "follow",
       "source": "user",
       "target": "user",
-      "in": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 600},
-      "out": {"type": "power_law", "lambda": 1.15, "min-d": 1, "max-d": 530}
+      "edges": 4000,
+      "in": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 80},
+      "out": {"type": "power_law", "lambda": 2.5, "min-d": 1, "max-d": 70}
     }
   ],
   "store-format": "ADJ"

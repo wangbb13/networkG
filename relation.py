@@ -8,19 +8,23 @@ from utility import get_community_size, scale, transform
 
 
 class Relation(object):
-    def __init__(self, rel, node1, node2):
-        try:
-            JudgeLegal.legal_relation(rel)
-        except ConfigError as e:
-            raise e
+    def __init__(self, rel, node1, node2, edge_num):
+        # try:
+        #     JudgeLegal.legal_relation(rel)
+        # except ConfigError as e:
+        #     raise e
         self.label = rel['label']
         self.source = rel['source']
         self.target = rel['target']
         self.rel = rel
         self.node1 = node1
         self.node2 = node2
-        self.in_distribution = get_distribution(rel['in'], node2)
-        self.out_distribution = get_distribution(rel['out'], node1)
+        self.edge_num = edge_num
+        self.in_distribution = get_distribution(rel['in'], node2, edge_num)
+        self.out_distribution = get_distribution(rel['out'], node1, edge_num)
+        self.extend = self.out_distribution.need_extend()
+        if self.extend > 0:
+            self.node1 += self.extend
         self.has_middle = False
         if 'middle' in rel:
             self.middle = rel['middle']
@@ -42,6 +46,9 @@ class Relation(object):
             # for elem in rel['attr']:
             #     self.attr[elem['key']] = elem['value']
 
+    def get_extend(self):
+        return self.extend
+
     def generate_with_com(self):
         """
         yield one line every time
@@ -50,7 +57,7 @@ class Relation(object):
                 type(col_j) = set
         :return: None
         """
-        all_e = 0
+        # all_e = 0
         if not self.has_community:
             return
         com_cnt = self.com_amount
@@ -66,22 +73,22 @@ class Relation(object):
         start_i, start_j = 0, 0
         ul_col, ul_row, lr_col, lr_row = 0, 0, 0, 0
         for i in range(com_cnt):
-            out_pl = get_distribution(self.rel['out'], row_axis[i])
-            in_pl = get_distribution(self.rel['in'], col_axis[i])
+            out_pl = get_distribution(self.rel['out'], row_axis[i], -1)
+            in_pl = get_distribution(self.rel['in'], col_axis[i], -1)
             block_is_even = col_axis[i] % 2 == 1
             # upper left
             if over_lap > 0 and i > 0:
                 ul_col = int(col_axis[i-1] * over_lap)
                 ul_row = int(row_axis[i-1] * over_lap)
-                ul_in_pl = get_distribution(self.rel['in'], ul_col)
-                ul_out_pl = get_distribution(self.rel['out'], ul_row)
+                ul_in_pl = get_distribution(self.rel['in'], ul_col, -1)
+                ul_out_pl = get_distribution(self.rel['out'], ul_row, -1)
                 ul_is_even = ul_col % 2 == 1
             # lower right
             if over_lap > 0 and i < com_cnt-1:
                 lr_col = int(col_axis[i+1] * over_lap)
                 lr_row = int(row_axis[i+1] * over_lap)
-                lr_in_pl = get_distribution(self.rel['in'], lr_col)
-                lr_out_pl = get_distribution(self.rel['out'], lr_row)
+                lr_in_pl = get_distribution(self.rel['in'], lr_col, -1)
+                lr_out_pl = get_distribution(self.rel['out'], lr_row, -1)
                 lr_is_even = lr_col % 2 == 1
             for row in range(row_axis[i]):
                 a_line_set = set()
@@ -119,11 +126,11 @@ class Relation(object):
                         j = transform(lr_is_even, j, lr_col-1)
                         a_j = start_j + col_axis[i] + j
                         a_line_set.add(a_j)
-                all_e += len(a_line_set)
+                # all_e += len(a_line_set)
                 yield [a_i, a_line_set]
             start_i += row_axis[i]
             start_j += col_axis[i]
-        print('all edges: ', all_e)
+        # print('all edges: ', all_e)
 
     def generate_simple(self):
         """
@@ -148,16 +155,16 @@ class Relation(object):
                 type(col_j) = set
         :return: None
         """
-        all_e = 0
+        # all_e = 0
         for i in range(self.node1):
             ret = set()
             d_out = self.out_distribution.get_d()
-            all_e += d_out
+            # all_e += d_out
             for _ in range(d_out):
                 j = self.in_distribution.get_j()
                 ret.add(j)
             yield [i, ret]
-        print('all edges: ', all_e)
+        # print('all edges: ', all_e)
 
     def generate_batch_line(self, batch=-1):
         """
@@ -168,7 +175,7 @@ class Relation(object):
         :param batch: number of lines to yield
         :return: None
         """
-        all_e = 0
+        # all_e = 0
         if batch == -1:
             batch = int(self.node1 / 10)
         times = int(self.node1 / batch)
@@ -178,7 +185,7 @@ class Relation(object):
             ret = [[0, set()] for _ in range(batch)]
             for i in range(batch):
                 d_out = self.out_distribution.get_d()
-                all_e += d_out
+                # all_e += d_out
                 for x in range(d_out):
                     j = self.in_distribution.get_j()
                     ret[i][1].add(j)
@@ -188,14 +195,14 @@ class Relation(object):
         ret = [[0, set()] for _ in range(remain)]
         for i in range(remain):
             d_out = self.out_distribution.get_d()
-            all_e += d_out
+            # all_e += d_out
             for x in range(d_out):
                 j = self.in_distribution.get_j()
                 ret[i][1].add(j)
             ret[i][0] = row
             row += 1
         yield ret
-        print('all edges ', all_e)
+        # print('all edges ', all_e)
 
     def generate_special(self):
         """

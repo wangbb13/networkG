@@ -9,16 +9,20 @@ from visualization import show_plot
 
 
 class NGPowerLaw(object):
-    def __init__(self, lmd, dmin, dmax, node):
+    def __init__(self, lmd, dmin, dmax, node, edges):
         """
         :param lmd:  use -lmd, i.e. when lmd=1, we use lmd=-1
         :param dmin: min degree
         :param dmax: max degree
         """
-        self.lmd = -lmd
+        self.lmd = -abs(lmd)
         self.dmin = dmin
         self.dmax = dmax
         self.node = node
+
+        self.is_even = node % 2 == 1
+
+        self.edges = edges
         # self.cdf_d = []
         # self.cdf_j = []
         # self.idx_j = []
@@ -26,8 +30,36 @@ class NGPowerLaw(object):
         self.sigma = sum(self.d_exp_r)
         self.c = 1 / self.sigma
         self.C = node / self.sigma
+        if edges > 0:
+            self.e_c = edges / sum([d ** (self.lmd + 1) for d in range(dmin, dmax+1)])
+            self.expect_node = int(self.sigma * self.e_c)
+            self.select_dp = self.expect_node / node
+        else:
+            self.expect_node = node
+            self.select_dp = 0.9
+        # print('select d probability: ', self.select_dp)
         self.cdf_d = self.get_cdf(self.c)
         self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
+        step = int(math.sqrt(dmax-dmin+1))
+        self.step_cdf_j, self.step_idx_j = self.splite(step)
+
+    def need_extend(self):
+        return self.expect_node - self.node
+
+    def splite(self, step):
+        leng = len(self.cdf_j)
+        cdf = [0 for _ in range(step+1)]
+        idx = [0 for _ in range(step+1)]
+        one_step = int(leng / step)
+        cdf[0] = self.cdf_j[0]
+        last_i = 0
+        for i in range(1, step):
+            last_i += one_step
+            cdf[i] = self.cdf_j[last_i]
+            idx[i] = last_i
+        cdf[step] = self.cdf_j[-1]
+        idx[step] = leng
+        return cdf, idx
 
     def get_d_type(self):
         return 'power_law'
@@ -66,6 +98,9 @@ class NGPowerLaw(object):
     def get_d(self):
         # if not self.cdf_d:
         #     self.cdf_d = self.get_cdf(self.c)
+        x = random.random()
+        if x > self.select_dp:
+            return 0
         y = random.random()
         i = bin_search(self.cdf_d, y)
         return i + self.dmin
@@ -74,15 +109,33 @@ class NGPowerLaw(object):
         # if (not self.cdf_j) and (not self.idx_j):
         #     self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
         y = max(random.random(), self.cdf_j[0])
+        # method 1
         i = bin_search(self.cdf_j, y)
+        # method 2
+        # j = bin_search(self.step_cdf_j, y)
+        # if self.step_cdf_j[j] == y:
+        #     i = self.step_idx_j[j]
+        # else:
+        #     left = self.step_idx_j[j-1]
+        #     right = self.step_idx_j[j] + 1
+        #     i = bin_search(self.cdf_j[left:right], y) + left
+        # end method
+        ans = 0
         if self.cdf_j[i] > y:
             a = self.idx_j[i-1]
             b = self.idx_j[i]
             c = self.cdf_j[i-1]
             d = self.cdf_j[i]
-            return a + int((y - c) * (b - a) / (d - c))
+            try:
+                ans = a + int((y - c) * (b - a) / (d - c))
+            except ZeroDivisionError:
+                ans = a
+                # print(self.cdf_j)
+                # raise e
         else:
-            return self.idx_j[i]
+            ans = self.idx_j[i]
+
+        return transform(self.is_even, ans, self.node-1)
 
 
 def test():

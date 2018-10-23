@@ -11,6 +11,7 @@ class JudgeLegal(object):
     attr_value_type = {'str', 'time', 'date', 'email', 'lang'}
     distribution_type = {'power_law', 'uniform', 'gaussian'}
     shape_type = {'chain', 'star', 'cycle', 'starchain'}
+    store_format_type = {'TSV', 'ADJ', 'CSR'}
 
     def __init__(self):
         pass
@@ -111,6 +112,8 @@ class JudgeLegal(object):
             raise ConfigError('Lack of fields: source, target, in or out')
         if 'label' not in rel:
             raise ConfigError('Lack of fields of Relation: label')
+        if 'edges' not in rel:
+            raise ConfigError('Lack of fields of Relation: edges')
         JudgeLegal.legal_distribution(rel['in'])
         JudgeLegal.legal_distribution(rel['out'])
         if 'community' in rel:
@@ -207,7 +210,7 @@ class JudgeLegal(object):
             raise ConfigError('The type of node and relation should be list')
         if "store-format" not in scheme:
             raise ConfigError('Lack of a field in scheme: store-format')
-        if scheme['store-format'] not in ['TSV', 'ADJ', 'CSR']:
+        if scheme['store-format'] not in JudgeLegal.store_format_type:
             raise ConfigError('%s is not a supported format (TSV, ADJ, CSR)' % scheme['store-format'])
 
 
