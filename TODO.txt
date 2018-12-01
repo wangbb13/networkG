@@ -1,0 +1,10 @@
+# generate special situation (min = max = 1)
+  meantime, update the node count
+
+# modify the implementation of overlap community
+
+# evaluate indicator: degree distribution, diameter, avg path len
+
+# gaussian distribution
+
+

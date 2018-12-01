@@ -3,3 +3,4 @@ test.py
 data/*
 query/*
 *.dat
+__pycache__/
