@@ -6,9 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utility import bin_search
 from visualization import show_plot
+from pwl import NGPowerLaw
 
 
-class NGPowerLaw(object):
+class __NGPowerLaw(object):
     def __init__(self, lmd, dmin, dmax, node, edges):
         """
         :param lmd:  use -lmd, i.e. when lmd=1, we use lmd=-1
@@ -18,35 +19,92 @@ class NGPowerLaw(object):
         self.lmd = -abs(lmd)
         self.dmin = dmin
         self.dmax = dmax
+        self.dnum = self.dmax - self.dmin + 1
         self.node = node
+        self.ceiling = min(dmax * 2, node)
 
         self.is_even = node % 2 == 1
 
-        self.edges = edges
         # self.cdf_d = []
         # self.cdf_j = []
         # self.idx_j = []
         self.d_exp_r = [d ** self.lmd for d in range(dmin, dmax+1)]
         self.sigma = sum(self.d_exp_r)
-        self.c = 1 / self.sigma
+        # self.c = 1 / self.sigma
         self.C = node / self.sigma
-        if edges > 0:
-            self.e_c = edges / sum([d ** (self.lmd + 1) for d in range(dmin, dmax+1)])
-            self.expect_node = int(self.sigma * self.e_c)
-            self.select_dp = self.expect_node / node
-        else:
-            self.expect_node = node
-            self.select_dp = 0.9
+        # if actual edges < expected edges, then add dmax
+        a_edges = sum([int(self.C * _ * __) for _, __ in zip(self.d_exp_r, list(range(dmin, dmax+1)))])
+        # print('actual edges =', a_edges)
+        self.edges = a_edges
+        if a_edges > edges:
+            _sum_ = sum([_ * __ for _, __ in zip(self.d_exp_r, list(range(dmin, dmax+1)))])
+            self.e_c = edges / _sum_
+            self.e_n = int(self.sigma * self.e_c)
+            self.select_dp = 1
+        if a_edges < edges:
+            self.adjust_d(edges)
+            self.select_dp = 1
+        # while a_edges < edges:
+        #     self.dmax += 1
+        #     self.d_exp_r = [d ** self.lmd for d in range(self.dmin, self.dmax + 1)]
+        #     self.sigma = sum(self.d_exp_r)
+        #     self.C = node / self.sigma
+        #     a_edges = self.C * sum(_ * self.lmd for _ in self.d_exp_r)
+        #     self.edges = a_edges
+        # if edges > 0:
+        #     self.e_c = edges / sum([d ** (self.lmd + 1) for d in range(dmin, dmax+1)])
+        #     self.expect_node = int(self.sigma * self.e_c)
+        #     self.select_dp = self.expect_node / node
+        # else:
+        #     self.expect_node = node
+        #     self.select_dp = 0.9
+        # self.expect_node = node
         # print('select d probability: ', self.select_dp)
-        self.cdf_d = self.get_cdf(self.c)
+
+        # for in node
+        # self.cdf_d = self.get_cdf(self.c)
         self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
-        step = int(math.sqrt(dmax-dmin+1))
-        self.step_cdf_j, self.step_idx_j = self.splite(step)
+        print('cdf_j', self.cdf_j)
+        print('idx_j', self.idx_j)
+        # step = int(math.sqrt(dmax-dmin+1))
+        # self.step_cdf_j, self.step_idx_j = self.split(step)
+
+        # for out node
+        # patch for change get_d_
+        self.d_index, self.d_number = 0, 0
+        self.simple_cdf_d = [round(self.C * _) for _ in self.d_exp_r]
+        print('Number of Nodes (simple_cdf_d) =', sum(self.simple_cdf_d))
+        print('Number of Edges (simple_cdf_d) =', sum([_ * __ for _, __ in zip(self.simple_cdf_d, list(range(self.dmin, self.dmax+1)))]))
+
+        # extend nodes
+        self.expect_node = max(self.dmax, self.node)
 
     def need_extend(self):
         return self.expect_node - self.node
 
-    def splite(self, step):
+    def get_edges(self):
+        return self.edges
+
+    def adjust_d(self, expect_edges):
+        while self.edges < expect_edges:
+            self.dmax += 1
+            self.d_exp_r = [d ** self.lmd for d in range(self.dmin, self.dmax + 1)]
+            self.sigma = sum(self.d_exp_r)
+            self.C = self.node / self.sigma
+            temp = [int(self.C * _ * __) for _, __ in zip(self.d_exp_r, list(range(self.dmin, self.dmax+1)))]
+            self.edges = sum(temp)
+            if temp[-1] == 0 or self.dmax >= self.ceiling:  # stop criteria
+                break
+            # print('max degree =', self.dmax, ' edges =', self.edges)
+        print('adjust max edges =', self.edges, 'max degree =', self.dmax)
+        # self.pre_calc()
+
+    def pre_calc(self):
+        self.cdf_j, self.idx_j = self.get_cdf(self.C, False)
+        self.d_index, self.d_number = 0, 0
+        self.simple_cdf_d = [int(self.C * _) for _ in self.d_exp_r]
+
+    def split(self, step):
         leng = len(self.cdf_j)
         cdf = [0 for _ in range(step+1)]
         idx = [0 for _ in range(step+1)]
@@ -70,6 +128,15 @@ class NGPowerLaw(object):
         else:
             i = self.lmd + 1
             return (self.dmax ** i - self.dmin ** i) / i
+
+    def get_cdf_(self, c):
+        dmin = self.dmin
+        dmax = self.dmax
+        dnum = dmax - dmin + 1
+        ans = [0] * dnum
+        for i in range(dnum):
+            ans[i] = int(c * self.d_exp_r[i])
+        return ans
 
     def get_cdf(self, c, flag=True):
         dmin = self.dmin
@@ -95,15 +162,28 @@ class NGPowerLaw(object):
                 cdf[i] = cdf[i] / cdf[-1]
             return cdf, idx
 
-    def get_d(self):
+    def get_d_(self):
         # if not self.cdf_d:
         #     self.cdf_d = self.get_cdf(self.c)
-        x = random.random()
-        if x > self.select_dp:
-            return 0
+        # x = random.random()
+        # if x > self.select_dp:
+        #     return 0
         y = random.random()
         i = bin_search(self.cdf_d, y)
         return i + self.dmin
+
+    def get_d(self):
+        if random.random() > self.select_dp:
+            return 0
+        if self.d_index < self.dnum:
+            if self.d_number < self.simple_cdf_d[self.d_index]:
+                self.d_number += 1
+            else:
+                self.d_number = 1
+                self.d_index += 1
+            return self.d_index + self.dmin
+        else:
+            return 0
 
     def get_j(self):
         # if (not self.cdf_j) and (not self.idx_j):
@@ -120,7 +200,7 @@ class NGPowerLaw(object):
         #     right = self.step_idx_j[j] + 1
         #     i = bin_search(self.cdf_j[left:right], y) + left
         # end method
-        ans = 0
+        # ans = 0
         if self.cdf_j[i] > y:
             a = self.idx_j[i-1]
             b = self.idx_j[i]
@@ -135,7 +215,8 @@ class NGPowerLaw(object):
         else:
             ans = self.idx_j[i]
 
-        return transform(self.is_even, ans, self.node-1)
+        # return transform(self.is_even, ans, self.node-1)
+        return ans
 
 
 def test():

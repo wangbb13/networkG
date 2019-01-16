@@ -56,11 +56,15 @@ class Generator(object):
                 if edge_num > node1 * node2:
                     edge_num = int(node1 * node2 / 100)
                 rel = Relation(one, node1, node2, edge_num)
-                ext = rel.get_extend()
-                if ext > 0:
+                ext_o, ext_i = rel.get_extend()
+                if ext_o > 0 or ext_i > 0:
                     for one_ins in self.node_ins:
                         if one_ins.label == one['source']:
-                            one_ins.add_amount(ext)
+                            one_ins.add_amount(ext_o)
+                            print(one['source'], 'Node amount =', one_ins.amount)
+                        elif one_ins.label == one['target']:
+                            one_ins.add_amount(ext_i)
+                            print(one['target'], 'Node amount =', one_ins.amount)
                 self.relation_ins.append(rel)
         except ConfigError as e:
             raise e
@@ -103,6 +107,14 @@ class Generator(object):
                     length = len(line[1])
                     attr_stream.writeln(length)
                     rel_edges += length
+            elif rel.is_special():
+                for batch in rel.generate_special_batch():
+                    o_stream.write_batch(batch)
+                    length = [len(x[1]) for x in batch]
+                    attr_stream.write_batch(length)
+                    rel_edges += sum(length)
+                print('(%s)-[:%s]->(%s)  expect edges : %s, actual edges : %s ' % \
+                  (rel.source, rel.label, rel.target, rel.edge_num, rel_edges))
             else:
                 for batch in rel.generate_batch_line():
                     o_stream.write_batch(batch)
@@ -162,7 +174,7 @@ class Generator(object):
                     show_plot(in_degree_list, lambda x: x, rel.in_distribution.dmin, \
                               rel.in_distribution.dmax, 'in-degree distribution')
                 # show matrix thumbnail
-                # show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
+                show_matrix_thumbnail(data_file, self.format, rel.node1, rel.node2)
 
     def generate_nodes(self):
         node_path = os.path.join(self.base_dir, 'node')

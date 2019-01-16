@@ -22,9 +22,13 @@ class Relation(object):
         self.edge_num = edge_num
         self.in_distribution = get_distribution(rel['in'], node2, edge_num)
         self.out_distribution = get_distribution(rel['out'], node1, edge_num)
-        self.extend = self.out_distribution.need_extend()
-        if self.extend > 0:
-            self.node1 += self.extend
+        self.special_case = self.in_distribution.is_special()
+        self.extend_i = self.in_distribution.need_extend()
+        self.extend_o = self.out_distribution.need_extend()
+        if self.extend_o > 0:
+            self.node1 += self.extend_o
+        if self.extend_i > 0:
+            self.node2 += self.extend_i
         self.has_middle = False
         if 'middle' in rel:
             self.middle = rel['middle']
@@ -47,7 +51,7 @@ class Relation(object):
             #     self.attr[elem['key']] = elem['value']
 
     def get_extend(self):
-        return self.extend
+        return [self.extend_o, self.extend_i]
 
     def generate_with_com(self):
         """
@@ -155,16 +159,18 @@ class Relation(object):
                 type(col_j) = set
         :return: None
         """
-        # all_e = 0
+        all_e = 0
         for i in range(self.node1):
             ret = set()
             d_out = self.out_distribution.get_d()
-            # all_e += d_out
+            all_e += d_out
             for _ in range(d_out):
                 j = self.in_distribution.get_j()
+                while j in ret:
+                    j = self.in_distribution.get_j()
                 ret.add(j)
             yield [i, ret]
-        # print('all edges: ', all_e)
+        print('all edges: ', all_e)
 
     def generate_batch_line(self, batch=-1):
         """
@@ -175,7 +181,7 @@ class Relation(object):
         :param batch: number of lines to yield
         :return: None
         """
-        # all_e = 0
+        all_e = 0
         if batch == -1:
             batch = int(self.node1 / 10)
         times = int(self.node1 / batch)
@@ -185,7 +191,7 @@ class Relation(object):
             ret = [[0, set()] for _ in range(batch)]
             for i in range(batch):
                 d_out = self.out_distribution.get_d()
-                # all_e += d_out
+                all_e += d_out
                 for x in range(d_out):
                     j = self.in_distribution.get_j()
                     ret[i][1].add(j)
@@ -195,14 +201,17 @@ class Relation(object):
         ret = [[0, set()] for _ in range(remain)]
         for i in range(remain):
             d_out = self.out_distribution.get_d()
-            # all_e += d_out
+            all_e += d_out
             for x in range(d_out):
                 j = self.in_distribution.get_j()
                 ret[i][1].add(j)
             ret[i][0] = row
             row += 1
         yield ret
-        # print('all edges ', all_e)
+        print('all edges ', all_e)
+
+    def is_special(self):
+        return self.special_case
 
     def generate_special(self):
         """
@@ -216,11 +225,14 @@ class Relation(object):
                  ret[i] = the degree of node i
                  e.g. ret[0] = 9, then relations are: 0 -> 0, 0 -> 1, ... 0 -> 8
                  and so on
+                 modify: same as above
         """
         ret = [0] * self.node1
+        col = 0
         for i in range(self.node1):
             d_out = self.out_distribution.get_d()
-            ret.append(d_out)
+            ret[i] = [i, set([_ for _ in range(col, col + d_out)])]
+            col += d_out
         return ret
 
     def generate_special_batch(self, batch=-1):
@@ -229,10 +241,18 @@ class Relation(object):
         times = int(self.node1 / batch)
         remain = self.node1 % batch
         ret = [0] * batch
+        col = 0
+        row = 0
         for _ in range(times):
             for i in range(batch):
-                ret[i] = self.out_distribution.get_d()
+                d_out = self.out_distribution.get_d()
+                ret[i] = [row, set([_ for _ in range(col, col + d_out)])]
+                row += 1
+                col += d_out
             yield ret
         for i in range(remain):
-            ret[i] = self.out_distribution.get_d()
+            d_out = self.out_distribution.get_d()
+            ret[i] = [row, set([_ for _ in range(col, col + d_out)])]
+            row += 1
+            col += d_out
         yield ret[:remain]

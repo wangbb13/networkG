@@ -1,0 +1,24 @@
+{
+  "gdb": "test",
+  "node": [
+    {
+      "label": "user",
+      "amount": 10000
+    },
+    {
+      "label": "status",
+      "amount": 1000000
+    }
+  ],
+  "relation": [
+    {
+      "label": "emit",
+      "source": "user",
+      "target": "status",
+      "edges": 1500000,
+      "out": {"type": "power_law", "lambda": 1.15, "min-d": 10, "max-d": 1000},
+      "in": {"type": "uniform", "min-d": 1, "max-d": 1}
+    }
+  ],
+  "store-format": "ADJ"
+}

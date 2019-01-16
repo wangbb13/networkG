@@ -14,6 +14,9 @@ class NGUniform(object):
     def need_extend(self):
         return 0
 
+    def is_special(self):
+        return self.dmin == self.dmax == 1
+
     def get_d_type(self):
         return 'uniform'
 
